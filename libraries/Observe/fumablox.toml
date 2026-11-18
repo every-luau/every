@@ -1,6 +1,6 @@
 title = "Observe"
 description = "Runs a callback for every player, character, instance, tag or value, now and later."
-gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
+gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
 code = ["src"]

@@ -1,9 +1,9 @@
 [package]
-name = "nall/timer"
+name = "every/timer"
 version = "0.1.0"
 description = "A stopwatch or countdown with a speed, updated every frame."
 authors = []
-repository = "not-another-luau-lib/nall"
+repository = "every-luau/every"
 license = "MIT"
 
 [target]
@@ -16,10 +16,10 @@ wally = "https://github.com/UpliftGames/wally-index"
 pesde = "https://github.com/pesde-pkg/index"
 
 [dependencies]
-Loop = { name = "nall/loop", version = "^0.1.0" }
-Signal = { name = "nall/signal", version = "^0.1.0" }
-Void = { name = "nall/void", version = "^0.1.0" }
-# Signal = { name = "nall/signal", version = "^0.1.0" }
+Loop = { name = "every/loop", version = "^0.1.0" }
+Signal = { name = "every/signal", version = "^0.1.0" }
+Void = { name = "every/void", version = "^0.1.0" }
+# Signal = { name = "every/signal", version = "^0.1.0" }
 # Promise = { name = "evaera/promise", version = "^4.0.0", index = "wally" }
 
 [tools]

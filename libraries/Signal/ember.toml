@@ -1,9 +1,9 @@
 [package]
-name = "nall/signal"
+name = "every/signal"
 version = "0.1.0"
 description = "A yield-safe signal whose handlers run on a recycled thread."
 authors = []
-repository = "not-another-luau-lib/nall"
+repository = "every-luau/every"
 license = "MIT"
 
 [target]
@@ -16,9 +16,9 @@ wally = "https://github.com/UpliftGames/wally-index"
 pesde = "https://github.com/pesde-pkg/index"
 
 [dependencies]
-Thread = { name = "nall/thread", version = "^0.1.0" }
-Connection = { name = "nall/connection", version = "^0.1.0" }
-# Signal = { name = "nall/signal", version = "^0.1.0" }
+Thread = { name = "every/thread", version = "^0.1.0" }
+Connection = { name = "every/connection", version = "^0.1.0" }
+# Signal = { name = "every/signal", version = "^0.1.0" }
 # Promise = { name = "evaera/promise", version = "^4.0.0", index = "wally" }
 
 [tools]

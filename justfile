@@ -39,7 +39,7 @@ docs lib:
     {{script}} run {{lib}} npx --yes @metricsrb/fumablox@1 check
 
 # Generate every library's docs and run the site locally
-[working-directory('not-another-luau-lib.github.io')]
+[working-directory('every-luau.github.io')]
 site:
     npm run generate -- ../libraries
     npm run dev

@@ -1,6 +1,6 @@
 title = "Connection"
 description = "A handle that cleans up a Void when disconnected."
-gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
+gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
 code = ["src"]

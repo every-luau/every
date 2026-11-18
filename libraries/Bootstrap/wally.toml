@@ -1,14 +1,14 @@
 [package]
-name = "nall/bootstrap"
+name = "every/bootstrap"
 version = "0.1.0"
 description = "Requires ModuleScripts and calls their hooks in order of priority."
 authors = []
-repository = "https://github.com/not-another-luau-lib/nall"
+repository = "https://github.com/every-luau/every"
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
 
 [dependencies]
-Future = "nall/future@^0.1.0"
-# Signal = "nall/signal@^0.1.0"
+Future = "every/future@^0.1.0"
+# Signal = "every/signal@^0.1.0"

@@ -1,15 +1,15 @@
 [package]
-name = "nall/signal"
+name = "every/signal"
 version = "0.1.0"
 description = "A yield-safe signal whose handlers run on a recycled thread."
 authors = []
-repository = "https://github.com/not-another-luau-lib/nall"
+repository = "https://github.com/every-luau/every"
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
 
 [dependencies]
-Thread = "nall/thread@^0.1.0"
-Connection = "nall/connection@^0.1.0"
-# Signal = "nall/signal@^0.1.0"
+Thread = "every/thread@^0.1.0"
+Connection = "every/connection@^0.1.0"
+# Signal = "every/signal@^0.1.0"

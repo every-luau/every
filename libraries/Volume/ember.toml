@@ -1,9 +1,9 @@
 [package]
-name = "nall/volume"
+name = "every/volume"
 version = "0.1.0"
 description = "A box made of a CFrame and a size, with containment checks."
 authors = []
-repository = "not-another-luau-lib/nall"
+repository = "every-luau/every"
 license = "MIT"
 
 [target]
@@ -16,7 +16,7 @@ wally = "https://github.com/UpliftGames/wally-index"
 pesde = "https://github.com/pesde-pkg/index"
 
 [dependencies]
-# Signal = { name = "nall/signal", version = "^0.1.0" }
+# Signal = { name = "every/signal", version = "^0.1.0" }
 # Promise = { name = "evaera/promise", version = "^4.0.0", index = "wally" }
 
 [tools]

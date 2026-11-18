@@ -1,8 +1,8 @@
-name = "nall/region"
+name = "every/region"
 version = "0.1.0"
 description = "A box that reports what enters and leaves it, every frame, without physics queries."
 authors = []
-repository = "https://github.com/not-another-luau-lib/nall"
+repository = "https://github.com/every-luau/every"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 
@@ -18,12 +18,12 @@ default = "https://github.com/pesde-pkg/index"
 default = "https://github.com/UpliftGames/wally-index"
 
 [dependencies]
-Connection = { name = "nall/connection", version = "^0.1.0" }
-Loop = { name = "nall/loop", version = "^0.1.0" }
-Observe = { name = "nall/observe", version = "^0.1.0" }
-Signal = { name = "nall/signal", version = "^0.1.0" }
-Thread = { name = "nall/thread", version = "^0.1.0" }
-Void = { name = "nall/void", version = "^0.1.0" }
-Volume = { name = "nall/volume", version = "^0.1.0" }
-# Signal = { name = "nall/signal", version = "^0.1.0" }
+Connection = { name = "every/connection", version = "^0.1.0" }
+Loop = { name = "every/loop", version = "^0.1.0" }
+Observe = { name = "every/observe", version = "^0.1.0" }
+Signal = { name = "every/signal", version = "^0.1.0" }
+Thread = { name = "every/thread", version = "^0.1.0" }
+Void = { name = "every/void", version = "^0.1.0" }
+Volume = { name = "every/volume", version = "^0.1.0" }
+# Signal = { name = "every/signal", version = "^0.1.0" }
 # Promise = { wally = "evaera/promise", version = "^4.0.0" }

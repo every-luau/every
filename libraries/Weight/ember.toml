@@ -1,9 +1,9 @@
 [package]
-name = "nall/weight"
+name = "every/weight"
 version = "0.1.0"
 description = "Picks random keys from a table of weights, with an optional luck factor."
 authors = []
-repository = "not-another-luau-lib/nall"
+repository = "every-luau/every"
 license = "MIT"
 
 [target]
@@ -17,7 +17,7 @@ pesde = "https://github.com/pesde-pkg/index"
 
 [dependencies]
 Cryptography = { name = "daily3014/cryptography", version = "^3.1.4", index = "wally" }
-# Signal = { name = "nall/signal", version = "^0.1.0" }
+# Signal = { name = "every/signal", version = "^0.1.0" }
 # Promise = { name = "evaera/promise", version = "^4.0.0", index = "wally" }
 
 [tools]

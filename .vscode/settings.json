@@ -5,7 +5,7 @@
   "luau-lsp.sourcemap.sourcemapFile": "sourcemap.json",
 
   "charmed-icons.associations.folders": {
-    "not-another-luau-lib.github.io": "folder_web",
+    "every-luau.github.io": "folder_web",
     "examples": ""
   },
 

@@ -1,8 +1,8 @@
-# nall
+# every
 
-Not Another Luau Lib: small Luau libraries for Roblox, each published on its own as `nall/<name>` to [ember](https://luaupm.com), [pesde](https://pesde.dev) and [wally](https://wally.run).
+Small Luau libraries for Roblox, each published on its own as `every/<name>` to [ember](https://luaupm.com), [pesde](https://pesde.dev) and [wally](https://wally.run).
 
-Documentation: https://not-another-luau-lib.github.io
+Documentation: https://every-luau.github.io
 
 | Library | |
 | --- | --- |
@@ -49,4 +49,4 @@ just bump Signal minor     # bump it in ember, pesde and wally
 just release Signal patch  # bump, test and publish to every registry
 ```
 
-CI tests and checks the docs of every library on each push, then rebuilds the [documentation site](https://github.com/not-another-luau-lib/not-another-luau-lib.github.io).
+CI tests and checks the docs of every library on each push, then rebuilds the [documentation site](https://github.com/every-luau/every-luau.github.io).

@@ -1,14 +1,14 @@
 [package]
-name = "nall/void"
+name = "every/void"
 version = "0.1.0"
 description = ""
 authors = []
-repository = "https://github.com/not-another-luau-lib/nall"
+repository = "https://github.com/every-luau/every"
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
 
 [dependencies]
-Thread = "nall/thread@^0.1.0"
-# Signal = "nall/signal@^0.1.0"
+Thread = "every/thread@^0.1.0"
+# Signal = "every/signal@^0.1.0"

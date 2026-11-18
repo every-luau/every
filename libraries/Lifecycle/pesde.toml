@@ -1,8 +1,8 @@
-name = "nall/lifecycle"
+name = "every/lifecycle"
 version = "0.1.0"
 description = "Builds objects whose lifecycle hooks are registered with chainable calls."
 authors = []
-repository = "https://github.com/not-another-luau-lib/nall"
+repository = "https://github.com/every-luau/every"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 
@@ -18,5 +18,5 @@ default = "https://github.com/pesde-pkg/index"
 default = "https://github.com/UpliftGames/wally-index"
 
 [dependencies]
-# Signal = { name = "nall/signal", version = "^0.1.0" }
+# Signal = { name = "every/signal", version = "^0.1.0" }
 # Promise = { wally = "evaera/promise", version = "^4.0.0" }

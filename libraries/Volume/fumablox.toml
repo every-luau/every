@@ -1,6 +1,6 @@
 title = "Volume"
 description = "A box made of a CFrame and a size, with containment checks."
-gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
+gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
 code = ["src"]

@@ -1,6 +1,6 @@
 title = "Retryer"
 description = "Calls a function again until it stops erroring, with different waits."
-gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
+gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
 code = ["src"]
