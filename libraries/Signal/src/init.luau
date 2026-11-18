@@ -219,6 +219,7 @@ function Signal.fire<T...>(self: Signal<T...>, ...: T...)
 		if node._connection.connected then
 			Thread(node._callback, ...)
 		end
+
 		node = node._next
 	end
 end
