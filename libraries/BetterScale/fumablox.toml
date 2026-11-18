@@ -1,5 +1,6 @@
 title = "BetterScale"
 description = "Scales a UIScale with the size of its gui, configured with attributes."
+emoji = "📐"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

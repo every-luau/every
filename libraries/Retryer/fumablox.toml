@@ -1,5 +1,6 @@
 title = "Retryer"
 description = "Calls a function again until it stops erroring, with different waits."
+emoji = "♻️"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

@@ -1,5 +1,6 @@
 title = "Lifecycle"
 description = "Builds objects whose lifecycle hooks are registered with chainable calls."
+emoji = "🔄"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

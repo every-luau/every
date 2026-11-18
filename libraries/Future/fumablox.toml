@@ -1,5 +1,6 @@
 title = "Future"
 description = "A value available later, with chaining, combinators and cancellation."
+emoji = "⏳"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

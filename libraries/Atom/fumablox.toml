@@ -1,5 +1,6 @@
 title = "Atom"
 description = "A value that can be observed, derived and updated."
+emoji = "⚛️"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

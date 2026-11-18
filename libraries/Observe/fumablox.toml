@@ -1,5 +1,6 @@
 title = "Observe"
 description = "Runs a callback for every player, character, instance, tag or value, now and later."
+emoji = "👀"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

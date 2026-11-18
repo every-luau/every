@@ -1,5 +1,6 @@
 title = "Ratelimit"
 description = "Limits how many times something can happen per key within an interval."
+emoji = "🚦"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

@@ -1,5 +1,6 @@
 title = "Loop"
 description = "Calls a callback every few seconds, driven by Heartbeat."
+emoji = "🔁"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
