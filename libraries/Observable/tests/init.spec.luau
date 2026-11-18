@@ -172,6 +172,68 @@ describe("Observable", function()
 		expect(running()).toBe(0)
 	end)
 
+	it("cleans up when the subscription ends while the producer runs", function()
+		local cleaned = 0
+		local observable = Observable.new(function(emit)
+			emit(1)
+			emit(2)
+			return function()
+				cleaned += 1
+			end
+		end)
+
+		local values: { any } = {}
+		local connection: any
+		connection = observable:subscribe(function(value)
+			table.insert(values, value)
+			if connection then
+				connection:disconnect()
+			end
+		end)
+		connection:disconnect()
+
+		expect(values).toEqual({ 1, 2 })
+		expect(cleaned).toBe(1)
+
+		local first: { any } = {}
+		local own: any
+		own = Observable.new(function(emit)
+			own:destroy()
+			emit(1)
+			return function()
+				cleaned += 1
+			end
+		end)
+		own:subscribe(function(value)
+			table.insert(first, value)
+		end)
+
+		expect(#first).toBe(0)
+		expect(cleaned).toBe(2)
+	end)
+
+	it("compares with a custom equals in changed", function()
+		local observable, emit = subject()
+		local values = collect(observable:changed(function(a, b)
+			return math.floor(a) == math.floor(b)
+		end))
+
+		for _, value in { 1, 1.5, 2, 2.9, 1 } do
+			emit(value)
+		end
+
+		expect(values).toEqual({ 1, 2, 1 })
+	end)
+
+	it("rejects values that can't be connected to", function()
+		expect(function()
+			Observable.from_signal(5 :: any)
+		end).toThrow()
+		expect(function()
+			Observable.from_signal({} :: any)
+		end).toThrow()
+	end)
+
 	it("tells observables apart", function()
 		expect(Observable.is(Observable.from_value(1))).toBe(true)
 		expect(Observable.is({})).toBe(false)
