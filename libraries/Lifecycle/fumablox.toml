@@ -1,0 +1,10 @@
+title = "Lifecycle"
+description = "Builds objects whose lifecycle hooks are registered with chainable calls."
+gitRepoUrl = "https://github.com/not-another-luau-lib/lifecycle"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true

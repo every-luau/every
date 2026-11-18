@@ -1,0 +1,20 @@
+[package]
+name = "nall/region"
+version = "0.1.0"
+description = "A box that reports what enters and leaves it, every frame, without physics queries."
+authors = []
+repository = "https://github.com/not-another-luau-lib/region"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
+
+[dependencies]
+Connection = "nall/connection@^0.1.0"
+Loop = "nall/loop@^0.1.0"
+Observe = "nall/observe@^0.1.0"
+Signal = "nall/signal@^0.1.0"
+Thread = "nall/thread@^0.1.0"
+Void = "nall/void@^0.1.0"
+Volume = "nall/volume@^0.1.0"
+# Signal = "nall/signal@^0.1.0"

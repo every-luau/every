@@ -1,0 +1,13 @@
+[package]
+name = "nall/template"
+version = "0.1.0"
+description = ""
+authors = []
+repository = "https://github.com/not-another-luau-lib/template"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
+
+[dependencies]
+# Signal = "nall/signal@^0.1.0"

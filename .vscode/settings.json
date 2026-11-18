@@ -1,0 +1,49 @@
+{
+  "luau-lsp.sourcemap.enabled": true,
+  "luau-lsp.sourcemap.autogenerate": true,
+  "luau-lsp.sourcemap.generatorCommand": "lune run scripts/lib sourcemap",
+  "luau-lsp.sourcemap.sourcemapFile": "sourcemap.json",
+
+  "charmed-icons.associations.folders": {
+    "not-another-luau-lib.github.io": "folder_web",
+    "examples": ""
+  },
+
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    ".env": ".env.*",
+    "*.luau": "${capture}.spec.luau, ${capture}.test.luau, ${capture}.template.luau, ${capture}.*.luau",
+    "*": "${basename}.*.${extname}"
+  },
+
+  "files.exclude": {
+    "pesde.lock": true
+  },
+
+  "todohighlight.isEnable": true,
+  "todohighlight.isCaseSensitive": true,
+  "todohighlight.keywordsPattern": "(?<=^|[\\s\"'(])(TODO|WARNING|NOTE|INFO|FIXME|BUG|DEBUG)(-\\d+)?:?(?!\\w)",
+  "todohighlight.defaultStyle": {
+    "color": "#FFFFFF",
+    "backgroundColor": "rgba(0,0,0,0)",
+    "border": "none"
+  },
+  "todohighlight.include": [
+    "**/*.luau",
+    "**/*.lua",
+    "**/*.toml",
+    "**/*.json",
+    "**/*.md",
+    "**/*.yml"
+  ],
+  "todohighlight.exclude": [
+    "**/dist/**",
+    "**/build/**",
+    "**/.larvae/**",
+    "**/.lest/**",
+    "**/.luau-lsp/**",
+    "**/packages/**",
+    "**/luau/**"
+  ],
+  "stylua.targetReleaseVersion": "latest"
+}

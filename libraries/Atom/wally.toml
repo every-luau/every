@@ -1,0 +1,16 @@
+[package]
+name = "nall/atom"
+version = "0.1.0"
+description = "A value that can be observed, derived and updated."
+authors = []
+repository = "https://github.com/not-another-luau-lib/atom"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
+
+[dependencies]
+Signal = "nall/signal@^0.1.0"
+Thread = "nall/thread@^0.1.0"
+Void = "nall/void@^0.1.0"
+# Signal = "nall/signal@^0.1.0"

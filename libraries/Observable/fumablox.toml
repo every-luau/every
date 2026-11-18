@@ -1,0 +1,10 @@
+title = "Observable"
+description = "A reactive stream of values to subscribe to, map, filter and dedupe."
+gitRepoUrl = "https://github.com/not-another-luau-lib/observable"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true

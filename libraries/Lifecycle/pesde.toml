@@ -1,0 +1,22 @@
+name = "nall/lifecycle"
+version = "0.1.0"
+description = "Builds objects whose lifecycle hooks are registered with chainable calls."
+authors = []
+repository = "https://github.com/not-another-luau-lib/lifecycle"
+license = "MIT"
+includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
+
+[target]
+environment = "roblox"
+lib = "src/init.luau"
+build_files = ["src"]
+
+[indices]
+default = "https://github.com/pesde-pkg/index"
+
+[wally_indices]
+default = "https://github.com/UpliftGames/wally-index"
+
+[dependencies]
+# Signal = { name = "nall/signal", version = "^0.1.0" }
+# Promise = { wally = "evaera/promise", version = "^4.0.0" }

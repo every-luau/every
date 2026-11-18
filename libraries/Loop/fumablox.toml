@@ -1,0 +1,10 @@
+title = "Loop"
+description = "Calls a callback every few seconds, driven by Heartbeat."
+gitRepoUrl = "https://github.com/not-another-luau-lib/loop"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true

@@ -1,0 +1,28 @@
+[package]
+name = "nall/void"
+version = "0.1.0"
+description = ""
+authors = []
+repository = "not-another-luau-lib/void"
+license = "MIT"
+
+[target]
+environment = "shared"
+main = "src/init.luau"
+includes = ["src", "default.project.json", "README.md", "LICENSE"]
+
+[indices]
+wally = "https://github.com/UpliftGames/wally-index"
+pesde = "https://github.com/pesde-pkg/index"
+
+[dependencies]
+Thread = { name = "nall/thread", version = "^0.1.0" }
+# Signal = { name = "nall/signal", version = "^0.1.0" }
+# Promise = { name = "evaera/promise", version = "^4.0.0", index = "wally" }
+
+[tools]
+lest = "lest-luau/lest@0.6.0"
+rojo = "rojo-rbx/rojo@7.7.0"
+
+[scripts]
+test = "lest"

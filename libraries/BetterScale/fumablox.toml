@@ -1,0 +1,10 @@
+title = "BetterScale"
+description = "Scales a UIScale with the size of its gui, configured with attributes."
+gitRepoUrl = "https://github.com/not-another-luau-lib/better-scale"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true

@@ -1,0 +1,14 @@
+[package]
+name = "nall/future"
+version = "0.1.0"
+description = "A value available later, with chaining, combinators and cancellation."
+authors = []
+repository = "https://github.com/not-another-luau-lib/future"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
+
+[dependencies]
+Thread = "nall/thread@^0.1.0"
+# Signal = "nall/signal@^0.1.0"

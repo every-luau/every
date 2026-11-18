@@ -1,0 +1,16 @@
+[package]
+name = "nall/timer"
+version = "0.1.0"
+description = "A stopwatch or countdown with a speed, updated every frame."
+authors = []
+repository = "https://github.com/not-another-luau-lib/timer"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+include = ["src", "default.project.json", "wally.toml", "README.md", "LICENSE"]
+
+[dependencies]
+Loop = "nall/loop@^0.1.0"
+Signal = "nall/signal@^0.1.0"
+Void = "nall/void@^0.1.0"
+# Signal = "nall/signal@^0.1.0"

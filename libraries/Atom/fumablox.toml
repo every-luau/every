@@ -1,0 +1,10 @@
+title = "Atom"
+description = "A value that can be observed, derived and updated."
+gitRepoUrl = "https://github.com/not-another-luau-lib/atom"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true
