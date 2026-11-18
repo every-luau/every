@@ -7,12 +7,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  # Every library with code (libraries/<Name>/src/init.luau), as a JSON array for the
+  # matrices below. Scaffolded libraries without code yet are left out.
+  libraries:
     runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.list.outputs.list }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install lest (version pinned in ember.toml)
+      - id: list
+        run: echo "list=$(ls libraries/*/src/init.luau | cut -d/ -f2 | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: libraries
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        library: ${{ fromJson(needs.libraries.outputs.list) }}
+    defaults:
+      run:
+        working-directory: libraries/${{ matrix.library }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install lest (version pinned in the library's ember.toml)
         run: |
           version=$(sed -n 's|^lest = "lest-luau/lest@\(.*\)"|\1|p' ember.toml)
           curl -fsSL "https://github.com/lest-luau/lest/releases/download/v$version/lest-$version-linux-x86_64.zip" -o "$RUNNER_TEMP/lest.zip"
@@ -23,7 +43,15 @@ jobs:
       - run: lest
 
   docs:
+    needs: libraries
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        library: ${{ fromJson(needs.libraries.outputs.list) }}
+    defaults:
+      run:
+        working-directory: libraries/${{ matrix.library }}
     steps:
       - uses: actions/checkout@v4
 

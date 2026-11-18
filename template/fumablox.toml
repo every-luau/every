@@ -1,6 +1,6 @@
 title = "Template"
 description = ""
-gitRepoUrl = "https://github.com/not-another-luau-lib/template"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

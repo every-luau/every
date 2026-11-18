@@ -3,7 +3,7 @@ name = "nall/ratelimit"
 version = "0.1.0"
 description = "Limits how many times something can happen per key within an interval."
 authors = []
-repository = "not-another-luau-lib/ratelimit"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

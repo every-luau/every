@@ -3,7 +3,7 @@ name = "nall/volume"
 version = "0.1.0"
 description = "A box made of a CFrame and a size, with containment checks."
 authors = []
-repository = "not-another-luau-lib/volume"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

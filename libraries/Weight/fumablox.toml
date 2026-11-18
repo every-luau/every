@@ -1,6 +1,6 @@
 title = "Weight"
 description = "Picks random keys from a table of weights, with an optional luck factor."
-gitRepoUrl = "https://github.com/not-another-luau-lib/weight"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

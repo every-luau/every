@@ -2,7 +2,7 @@ name = "nall/connection"
 version = "0.1.0"
 description = "A handle that cleans up a Void when disconnected."
 authors = []
-repository = "https://github.com/not-another-luau-lib/connection"
+repository = "https://github.com/not-another-luau-lib/nall"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 

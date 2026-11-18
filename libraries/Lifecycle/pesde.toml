@@ -2,7 +2,7 @@ name = "nall/lifecycle"
 version = "0.1.0"
 description = "Builds objects whose lifecycle hooks are registered with chainable calls."
 authors = []
-repository = "https://github.com/not-another-luau-lib/lifecycle"
+repository = "https://github.com/not-another-luau-lib/nall"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 

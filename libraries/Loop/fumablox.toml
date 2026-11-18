@@ -1,6 +1,6 @@
 title = "Loop"
 description = "Calls a callback every few seconds, driven by Heartbeat."
-gitRepoUrl = "https://github.com/not-another-luau-lib/loop"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

@@ -1,6 +1,6 @@
 title = "Observable"
 description = "A reactive stream of values to subscribe to, map, filter and dedupe."
-gitRepoUrl = "https://github.com/not-another-luau-lib/observable"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

@@ -3,7 +3,7 @@ name = "nall/weight"
 version = "0.1.0"
 description = "Picks random keys from a table of weights, with an optional luck factor."
 authors = []
-repository = "not-another-luau-lib/weight"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

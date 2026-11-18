@@ -3,7 +3,7 @@ name = "nall/signal"
 version = "0.1.0"
 description = "A yield-safe signal whose handlers run on a recycled thread."
 authors = []
-repository = "not-another-luau-lib/signal"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

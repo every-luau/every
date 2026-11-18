@@ -1,6 +1,6 @@
 title = "Void"
 description = ""
-gitRepoUrl = "https://github.com/not-another-luau-lib/void"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

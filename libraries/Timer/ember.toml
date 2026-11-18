@@ -3,7 +3,7 @@ name = "nall/timer"
 version = "0.1.0"
 description = "A stopwatch or countdown with a speed, updated every frame."
 authors = []
-repository = "not-another-luau-lib/timer"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

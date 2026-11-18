@@ -1,6 +1,6 @@
 title = "Ratelimit"
 description = "Limits how many times something can happen per key within an interval."
-gitRepoUrl = "https://github.com/not-another-luau-lib/ratelimit"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

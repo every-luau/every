@@ -3,7 +3,7 @@ name = "nall/observe"
 version = "0.1.0"
 description = "Runs a callback for every player, character, instance, tag or value, now and later."
 authors = []
-repository = "not-another-luau-lib/observe"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

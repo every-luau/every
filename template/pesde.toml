@@ -2,7 +2,7 @@ name = "nall/template"
 version = "0.1.0"
 description = ""
 authors = []
-repository = "https://github.com/not-another-luau-lib/template"
+repository = "https://github.com/not-another-luau-lib/nall"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 

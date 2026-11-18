@@ -3,7 +3,7 @@ name = "nall/bootstrap"
 version = "0.1.0"
 description = "Requires ModuleScripts and calls their hooks in order of priority."
 authors = []
-repository = "not-another-luau-lib/bootstrap"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

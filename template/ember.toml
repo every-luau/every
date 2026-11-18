@@ -3,7 +3,7 @@ name = "nall/template"
 version = "0.1.0"
 description = ""
 authors = []
-repository = "not-another-luau-lib/template"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

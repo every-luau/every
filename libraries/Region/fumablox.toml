@@ -1,6 +1,6 @@
 title = "Region"
 description = "A box that reports what enters and leaves it, every frame, without physics queries."
-gitRepoUrl = "https://github.com/not-another-luau-lib/region"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

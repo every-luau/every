@@ -1,6 +1,6 @@
 title = "Signal"
 description = "A yield-safe signal whose handlers run on a recycled thread."
-gitRepoUrl = "https://github.com/not-another-luau-lib/signal"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

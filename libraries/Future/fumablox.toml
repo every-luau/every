@@ -1,6 +1,6 @@
 title = "Future"
 description = "A value available later, with chaining, combinators and cancellation."
-gitRepoUrl = "https://github.com/not-another-luau-lib/future"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

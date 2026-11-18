@@ -3,7 +3,7 @@ name = "nall/region"
 version = "0.1.0"
 description = "A box that reports what enters and leaves it, every frame, without physics queries."
 authors = []
-repository = "not-another-luau-lib/region"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

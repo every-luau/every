@@ -2,7 +2,7 @@ name = "nall/better_scale"
 version = "0.1.0"
 description = "Scales a UIScale with the size of its gui, configured with attributes."
 authors = []
-repository = "https://github.com/not-another-luau-lib/better_scale"
+repository = "https://github.com/not-another-luau-lib/nall"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 

@@ -3,7 +3,7 @@ name = "nall/better-scale"
 version = "0.1.0"
 description = "Scales a UIScale with the size of its gui, configured with attributes."
 authors = []
-repository = "not-another-luau-lib/better-scale"
+repository = "not-another-luau-lib/nall"
 license = "MIT"
 
 [target]

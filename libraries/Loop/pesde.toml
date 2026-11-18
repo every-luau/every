@@ -2,7 +2,7 @@ name = "nall/loop"
 version = "0.1.0"
 description = "Calls a callback every few seconds, driven by Heartbeat."
 authors = []
-repository = "https://github.com/not-another-luau-lib/loop"
+repository = "https://github.com/not-another-luau-lib/nall"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 

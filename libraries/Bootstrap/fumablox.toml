@@ -1,6 +1,6 @@
 title = "Bootstrap"
 description = "Requires ModuleScripts and calls their hooks in order of priority."
-gitRepoUrl = "https://github.com/not-another-luau-lib/bootstrap"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

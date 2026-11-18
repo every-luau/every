@@ -1,6 +1,6 @@
 title = "BetterScale"
 description = "Scales a UIScale with the size of its gui, configured with attributes."
-gitRepoUrl = "https://github.com/not-another-luau-lib/better-scale"
+gitRepoUrl = "https://github.com/not-another-luau-lib/nall"
 gitSourceBranch = "main"
 
 code = ["src"]

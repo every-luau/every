@@ -156,7 +156,8 @@ function commands.new(name: string?)
 	local snake = string.gsub(kebab, "-", "_")
 	local dir = `libraries/{name}`
 	copyTemplate("template", dir, function(content, file)
-		-- Keeps whatever scope the template uses, only the package/repo name changes.
+		-- Keeps whatever scope the template uses, only the package name changes (every
+		-- library shares the monorepo's repository).
 		local slug = if file == "pesde.toml" then snake else kebab
 		content = string.gsub(content, '/template"', `/{slug}"`)
 		content = string.gsub(content, '"name": "template"', `"name": "{name}"`)

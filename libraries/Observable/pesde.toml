@@ -2,7 +2,7 @@ name = "nall/observable"
 version = "0.1.0"
 description = "A reactive stream of values to subscribe to, map, filter and dedupe."
 authors = []
-repository = "https://github.com/not-another-luau-lib/observable"
+repository = "https://github.com/not-another-luau-lib/nall"
 license = "MIT"
 includes = ["src", "default.project.json", "pesde.toml", "README.md", "LICENSE"]
 
