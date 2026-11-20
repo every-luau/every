@@ -17,7 +17,7 @@ Observable = { name = "every/observable", version = "^0.1.0" }
 embr install
 ```
 
-Installs [Connection](https://every-luau.github.io/docs/connection) and [Void](https://every-luau.github.io/docs/void) with it.
+Installs [Connection](https://every-luau.github.io/docs/connection), [Signal](https://every-luau.github.io/docs/signal) and [Void](https://every-luau.github.io/docs/void) with it.
 
 ## Usage
 

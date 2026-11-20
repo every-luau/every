@@ -13,8 +13,8 @@ includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
 [dependencies]
 Connection = { name = "every/connection", version = "^0.1.0" }
+Signal = { name = "every/signal", version = "^0.1.0" }
 Void = { name = "every/void", version = "^0.1.0" }
-# Signal = { name = "every/signal", version = "^0.1.0" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"

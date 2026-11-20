@@ -26,6 +26,7 @@
 ]=]
 
 const Connection = require(script.Parent.Connection)
+const Signal = require(script.Parent.Signal)
 const Void = require(script.Parent.Void)
 
 export type Connection = Connection.Connection
@@ -61,13 +62,13 @@ export type Observable<T> = setmetatable<{
 
 --[=[
 	@within Observable
-	@type SignalLike RBXScriptSignal | { connect: (self, (...any) -> ()) -> any } | { Connect: (self, (...any) -> ()) -> any }
+	@type SignalLike RBXScriptSignal | Signal<...any> | { Connect: (self, (...any) -> ()) -> any }
 
-	anything [Observable.from_signal] can follow: an RBXScriptSignal, a Signal, or
-	any table with a `connect` or `Connect` method returning something with a
-	`disconnect` or `Disconnect` method
+	anything [Observable.from_signal] can follow: an RBXScriptSignal, a [Signal],
+	or any table with a `Connect` method returning something with a `Disconnect`
+	method
 ]=]
-export type SignalLike = RBXScriptSignal | { connect: (any, (...any) -> ()) -> any } | { Connect: (any, (...any) -> ()) -> any }
+export type SignalLike = RBXScriptSignal | Signal.Signal<...any> | { Connect: (any, (...any) -> ()) -> any }
 
 const function connect(signal: any, listener: (...any) -> ()): any
 	if typeof(signal) == "RBXScriptSignal" then
