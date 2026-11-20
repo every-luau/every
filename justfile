@@ -10,7 +10,7 @@ default:
 new name:
     {{script}} new {{name}}
 
-# Show a library's version, or set it in ember/pesde/wally manifests
+# Show a library's version, or set it in its ember manifest
 version lib version="":
     {{script}} version {{lib}} {{version}}
 
@@ -44,16 +44,13 @@ site:
     npm run generate -- ../libraries
     npm run dev
 
-# Show what each registry would publish, without uploading
+# Show what ember would publish, without uploading
 dry-run lib:
     {{script}} run {{lib}} embr publish --dry-run
-    {{script}} run {{lib}} pesde publish --dry-run
 
-# Test then publish a library to ember, pesde and wally
+# Test then publish a library to ember
 publish lib: (test lib)
     {{script}} run {{lib}} embr publish
-    {{script}} run {{lib}} pesde publish
-    {{script}} run {{lib}} wally publish
 
 # Bump, then publish
 release lib kind="patch": (bump lib kind) (publish lib)

@@ -16,10 +16,6 @@
     "*": "${basename}.*.${extname}"
   },
 
-  "files.exclude": {
-    "pesde.lock": true
-  },
-
   "todohighlight.isEnable": true,
   "todohighlight.isCaseSensitive": true,
   "todohighlight.keywordsPattern": "(?<=^|[\\s\"'(])(TODO|WARNING|NOTE|INFO|FIXME|BUG|DEBUG)(-\\d+)?:?(?!\\w)",

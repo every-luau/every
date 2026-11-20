@@ -1,6 +1,6 @@
 # Every
 
-Small Luau libraries for Roblox, each published on its own as `every/<name>` to [ember](https://luaupm.com), [pesde](https://pesde.dev) and [wally](https://wally.run).
+Small Luau libraries for Roblox, each published on its own as `every/<name>` to [ember](https://luaupm.com).
 
 Documentation: https://every-luau.github.io
 
@@ -28,7 +28,7 @@ Documentation: https://every-luau.github.io
 ## Layout
 
 ```
-libraries/<Name>/   one package: src, tests, examples and its ember/pesde/wally manifests
+libraries/<Name>/   one package: src, tests, examples and its ember manifest
 template/           what `just new <Name>` copies
 scripts/lib.luau    versions, scaffolding and sourcemap, run by the justfile
 ```
@@ -47,8 +47,8 @@ just test Signal           # run a library's tests
 just test-all              # run every library's tests
 just docs Signal           # check its Moonwave docs
 just versions              # every library's version
-just bump Signal minor     # bump it in ember, pesde and wally
-just release Signal patch  # bump, test and publish to every registry
+just bump Signal minor     # bump its version
+just release Signal patch  # bump, test and publish to ember
 ```
 
 CI tests and checks the docs of every library on each push, then rebuilds the [documentation site](https://github.com/every-luau/every-luau.github.io).

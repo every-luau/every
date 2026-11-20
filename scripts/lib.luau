@@ -4,7 +4,7 @@ local process = require("@lune/process")
 local serde = require("@lune/serde")
 local stdio = require("@lune/stdio")
 
-local MANIFESTS = { "ember.toml", "pesde.toml", "wally.toml" }
+local MANIFESTS = { "ember.toml" }
 local SKIP = { [".lest"] = true, ["Packages"] = true, ["roblox_packages"] = true }
 
 local function fail(message: string): never
@@ -97,7 +97,7 @@ local function run(dir: string, command: { string })
 	end
 end
 
-local function copyTemplate(from: string, to: string, replace: (content: string, file: string) -> string)
+local function copyTemplate(from: string, to: string, replace: (content: string) -> string)
 	if not fs.isDir(to) then
 		fs.writeDir(to)
 	end
@@ -109,7 +109,7 @@ local function copyTemplate(from: string, to: string, replace: (content: string,
 		if fs.isDir(source) then
 			copyTemplate(source, target, replace)
 		elseif not fs.isFile(target) or fs.readFile(target) == "" then
-			fs.writeFile(target, replace(fs.readFile(source), name))
+			fs.writeFile(target, replace(fs.readFile(source)))
 		end
 	end
 end
@@ -153,18 +153,16 @@ function commands.new(name: string?)
 		fail("expected a PascalCase library name, e.g. `just new Signal`")
 	end
 	local kebab = string.lower((string.gsub(name :: string, "(%l)(%u)", "%1-%2")))
-	local snake = string.gsub(kebab, "-", "_")
 	local dir = `libraries/{name}`
-	copyTemplate("template", dir, function(content, file)
+	copyTemplate("template", dir, function(content)
 		-- Keeps whatever scope the template uses, only the package name changes (every
 		-- library shares the monorepo's repository).
-		local slug = if file == "pesde.toml" then snake else kebab
-		content = string.gsub(content, '/template"', `/{slug}"`)
+		content = string.gsub(content, '/template"', `/{kebab}"`)
 		content = string.gsub(content, '"name": "template"', `"name": "{name}"`)
 		content = string.gsub(content, "Template", name :: string)
 		return content
 	end)
-	print(`created {dir} (package name: {kebab}, pesde: {snake})`)
+	print(`created {dir} (package name: {kebab})`)
 end
 
 function commands.run(lib: string?, ...: string)

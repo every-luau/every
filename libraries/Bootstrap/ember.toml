@@ -11,14 +11,9 @@ environment = "shared"
 main = "src/init.luau"
 includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
-[indices]
-wally = "https://github.com/UpliftGames/wally-index"
-pesde = "https://github.com/pesde-pkg/index"
-
 [dependencies]
 Future = { name = "every/future", version = "^0.1.0" }
 # Signal = { name = "every/signal", version = "^0.1.0" }
-# Promise = { name = "evaera/promise", version = "^4.0.0", index = "wally" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"
