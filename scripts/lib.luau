@@ -158,6 +158,7 @@ function commands.new(name: string?)
 		-- Keeps whatever scope the template uses, only the package name changes (every
 		-- library shares the monorepo's repository).
 		content = string.gsub(content, '/template"', `/{kebab}"`)
+		content = string.gsub(content, "/docs/template", `/docs/{kebab}`)
 		content = string.gsub(content, '"name": "template"', `"name": "{name}"`)
 		content = string.gsub(content, "Template", name :: string)
 		return content

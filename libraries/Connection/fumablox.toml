@@ -1,5 +1,5 @@
 title = "Connection"
-description = "A handle that cleans up a Void when disconnected."
+description = "A handle that runs its cleanup once, when disconnected."
 emoji = "🔌"
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"

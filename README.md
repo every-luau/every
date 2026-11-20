@@ -9,7 +9,7 @@ Documentation: https://every-luau.github.io
 | ⚛️ [Atom](libraries/Atom) | A value that can be observed, derived and updated. |
 | 📐 [BetterScale](libraries/BetterScale) | Scales a UIScale with the size of its gui, configured with attributes. |
 | 🚀 [Bootstrap](libraries/Bootstrap) | Requires ModuleScripts and calls their hooks in order of priority. |
-| 🔌 [Connection](libraries/Connection) | A handle that cleans up a Void when disconnected. |
+| 🔌 [Connection](libraries/Connection) | A handle that runs its cleanup once, when disconnected. |
 | ⏳ [Future](libraries/Future) | A value available later, with chaining, combinators and cancellation. |
 | 🔄 [Lifecycle](libraries/Lifecycle) | Builds objects whose lifecycle hooks are registered with chainable calls. |
 | 🔁 [Loop](libraries/Loop) | Calls a callback every few seconds, driven by Heartbeat. |
