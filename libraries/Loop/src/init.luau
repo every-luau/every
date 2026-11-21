@@ -31,7 +31,7 @@ export type Connection = Connection.Connection
 
 --[=[
 	@within Loop
-	@function loop
+	@function new
 	@param interval number
 	@param callback (elapsed: number) -> ()
 	@return Connection
@@ -40,7 +40,7 @@ export type Connection = Connection.Connection
 	last call, until the returned [Connection] is disconnected. errors when
 	`interval` is negative
 ]=]
-const function loop(interval: number, callback: (elapsed: number) -> ()): Connection
+const function new(interval: number, callback: (elapsed: number) -> ()): Connection
 	assert(interval >= 0, `Loop needs a positive interval or 0, got {interval}`)
 	local elapsed = 0
 
@@ -57,10 +57,10 @@ end
 
 return table.freeze(
 	setmetatable(
-		{ new = loop },
+		{ new = new },
 		{
 			__call = function(_, interval: number, callback: (elapsed: number) -> ()): Connection
-				return loop(interval, callback)
+				return new(interval, callback)
 			end,
 		}
 	)
