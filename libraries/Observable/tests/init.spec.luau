@@ -76,15 +76,15 @@ describe("Observable", function()
 	end)
 
 	it("drops values emitted after disconnecting even without a cleanup", function()
-		local savedEmit: any = nil
+		local saved_emit: any = nil
 		local observable = Observable.new(function(emit)
-			savedEmit = emit
+			saved_emit = emit
 			return nil
 		end)
 
 		local values, connection = collect(observable)
 		connection:disconnect()
-		savedEmit(1)
+		saved_emit(1)
 		expect(#values).toBe(0)
 	end)
 

@@ -4,17 +4,12 @@
 --[=[
 	@class Void
 
-	keeps track of things that need to be cleaned up, and cleans them all at once
+	Void keeps track of things to clean up, and cleans them all at once
 
-	every item is cleaned the way its type expects: instances are destroyed,
-	connections are disconnected, threads are cancelled, functions are called on a
-	recycled thread (see Thread), and tables have their `Destroy`, `Disconnect`,
-	`destroy` or `disconnect` method called
-
-	:::info
-	items are stored as keys, so adding the same item twice keeps a single entry.
-	items are cleaned in no particular order
-	:::
+	add what a feature creates as you go, then call [Void:clean] when it ends.
+	instances are destroyed, connections disconnected, threads cancelled,
+	functions called with [Thread], and objects have their `Destroy`,
+	`Disconnect`, `destroy` or `disconnect` method called
 
 	```lua
 	local Void = require(path.to.Void)
@@ -28,6 +23,11 @@
 
 	void:clean() --> cleaned
 	```
+
+	:::info
+	adding the same item twice keeps a single entry, and items are cleaned in no
+	particular order
+	:::
 ]=]
 
 const Thread = require(script.Parent.Thread)
@@ -36,9 +36,8 @@ const Thread = require(script.Parent.Thread)
 	@within Void
 	@type Item Instance | RBXScriptConnection | thread | (...any) -> ...any | { Destroy: () -> () } | { destroy: () -> () } | { disconnect: () -> () } | Void
 
-	anything a Void knows how to clean. a table is only accepted if it has a
-	`Destroy`, `Disconnect`, `destroy` or `disconnect` method, which is checked when
-	it is added
+	anything a Void can clean. a table needs a `Destroy`, `Disconnect`, `destroy`
+	or `disconnect` method, checked when it is added
 ]=]
 export type Item = Instance | { Destroy: () -> () } | { destroy: () -> () } | { disconnect: () -> () } | RBXScriptConnection | ((...any) -> ...any) | { [any]: any } | thread | Void | () -> ()
 
@@ -84,14 +83,14 @@ const finalizers = {
 }
 
 const function get_finalizer(item: any): (any, string)
-	local typeName = typeof(item)
-	local finalizer = finalizers[typeName]
+	local type_name = typeof(item)
+	local finalizer = finalizers[type_name]
 
-	if not finalizer and typeName == "table" then
+	if not finalizer and type_name == "table" then
 		finalizer = item.Destroy or item.Disconnect or item.destroy or item.disconnect
 	end
 
-	return finalizer, typeName
+	return finalizer, type_name
 end
 
 const Void = {}
@@ -127,15 +126,15 @@ end
 	@return T
 	@error "Cannot add item of type '...'" -- `item` is not an [Item]
 
-	adds `item` and returns it, so an item can be created and added on one line
+	adds `item` and returns it, so you can create and add it on one line
 
 	```lua
 	local part = void:add(Instance.new("Part"))
 	```
 ]=]
 function Void.add<T>(self: Void, item: T & Item): T
-	local finalizer, typeName = get_finalizer(item)
-	assert(finalizer, `Cannot add item of type '{typeName}'.`)
+	local finalizer, type_name = get_finalizer(item)
+	assert(finalizer, `Cannot add item of type '{type_name}'.`)
 
 	self[item] = finalizer
 	return item
@@ -170,14 +169,12 @@ end
 	@param instance Instance
 	@return RBXScriptConnection
 
-	cleans the Void when `instance` or one of its ancestors is parented to nil,
-	which includes `instance` being destroyed. returns the connection, which is
-	also an item of the Void
+	cleans the Void when `instance` leaves the tree, destroyed or not. returns
+	the connection, which is also added to the Void
 
 	:::caution
-	the Void is cleaned as soon as `instance` leaves the tree, even if it is
-	parented back right after. an instance that has no parent yet can't lose it,
-	so attach it after parenting it
+	the Void is cleaned even if `instance` is parented back right after. attach
+	an instance after parenting it, since one with no parent can't lose it
 	:::
 ]=]
 function Void.attach_to_instance(self: Void, instance: Instance): RBXScriptConnection
@@ -227,14 +224,12 @@ end
 	@param instance T
 	@return T
 
-	clones `instance`, adds the clone and returns it
-
-	`instance` doesn't need to be archivable: it is made archivable for the clone
-	and set back right after
+	clones `instance`, adds the clone and returns it. `instance` doesn't need to
+	be archivable
 
 	:::info
-	descendants of `instance` that aren't archivable are still left out of the
-	clone, and the clone itself stays archivable
+	descendants that aren't archivable are still left out, and the clone itself
+	stays archivable
 	:::
 ]=]
 function Void.clone<T>(self: Void, instance: T & Instance): T
@@ -252,8 +247,8 @@ end
 	@method extend
 	@return Void
 
-	creates a Void that is an item of this one, so cleaning this one cleans it
-	too. it can still be cleaned on its own
+	creates a Void inside this one. cleaning this one cleans it too, and it can
+	still be cleaned on its own
 ]=]
 function Void.extend(self: Void): Void
 	return self:add(Void.new())
@@ -271,7 +266,6 @@ end
 	result and returns it
 
 	```lua
-	local signal = void:construct(Signal)
 	local part = void:construct(Instance, "Part")
 	```
 ]=]
@@ -299,8 +293,7 @@ end
 	@method wrap_clean
 	@return () -> ()
 
-	returns a function that cleans the Void when called, for anything that expects
-	a callback
+	returns a function that cleans the Void, to pass where a callback is expected
 
 	```lua
 	instance.Destroying:Once(void:wrap_clean())
@@ -335,8 +328,7 @@ end
 	@within Void
 	@method destroy
 
-	the same as Void:clean(), so a Void can be added to anything that cleans
-	objects through a `destroy` method, another Void included
+	the same as [Void:clean], so a Void can be added to another Void
 ]=]
 Void.destroy = Void.clean
 

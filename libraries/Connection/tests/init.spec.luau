@@ -2,7 +2,7 @@
 local Lest = require("@lest")
 local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
-require("./roblox")
+local roblox = require("./roblox")
 local Connection = require("../src")
 
 describe("Connection", function()
@@ -36,6 +36,19 @@ describe("Connection", function()
 		connection:disconnect()
 
 		expect(destroyed).toBe(1)
+	end)
+
+	it("disconnects an RBXScriptConnection when disconnected", function()
+		local calls = 0
+		local heartbeat = game:GetService("RunService").Heartbeat:Connect(function()
+			calls += 1
+		end)
+
+		Connection.new(heartbeat):disconnect()
+		roblox.step(1)
+
+		expect(calls).toBe(0)
+		expect(roblox.listeners()).toBe(0)
 	end)
 
 	it("disconnects when destroyed", function()

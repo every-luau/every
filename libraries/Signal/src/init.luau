@@ -4,17 +4,11 @@
 --[=[
 	@class Signal
 
-	a yield-safe signal whose handlers run on recycled threads, see Thread
+	Signal is a yield-safe signal whose handlers run on a recycled thread
 
-	handlers are stored in a doubly linked list, so connecting and disconnecting
-	never walk the list. connecting returns a [Connection] that unlinks the handler
-	when disconnected, and both a Signal and its connections can be added to a Void
-
-	:::info
-	handlers are called in the order they were connected. a handler connected
-	while the signal fires only runs on the next fire, and a handler disconnected
-	while the signal fires is skipped
-	:::
+	connect handlers, then fire values to all of them. each handler runs with
+	[Thread], so one that yields doesn't hold up the others, and connecting
+	returns a [Connection] that removes it
 
 	```lua
 	local Signal = require(path.to.Signal)
@@ -27,6 +21,13 @@
 	signal:fire("hello") --> hello
 	connection:disconnect()
 	```
+
+	:::info
+	handlers are called in the order they were connected. a handler connected
+	while the signal fires only runs on the next fire, and one disconnected while
+	it fires is skipped. handlers are kept in a doubly linked list, so connecting
+	and disconnecting never walk the list
+	:::
 ]=]
 
 const Connection = require(script.Parent.Connection)
@@ -171,7 +172,7 @@ end
 	@param callback (T...) -> ()
 	@return Connection
 
-	the same as Signal:connect(), but disconnects after the first fire
+	the same as [Signal:connect], but disconnects after the first fire
 ]=]
 function Signal.once<T...>(self: Signal<T...>, callback: (T...) -> ()): Connection
 	local connection: Connection
@@ -208,8 +209,7 @@ end
 	@method fire
 	@param ... T...
 
-	calls every connected handler with `...`, each on a recycled thread so a
-	yielding handler doesn't hold up the others
+	calls every connected handler with `...`, each on its own recycled thread
 ]=]
 function Signal.fire<T...>(self: Signal<T...>, ...: T...)
 	const last = self._count
@@ -229,8 +229,7 @@ end
 	@method fire_deferred
 	@param ... T...
 
-	the same as Signal:fire(), but at the next resumption point instead of right
-	away, see `task.defer`
+	the same as [Signal:fire], but deferred with `task.defer`
 ]=]
 function Signal.fire_deferred<T...>(self: Signal<T...>, ...: T...)
 	task.defer(Signal.fire, self, ...)
@@ -275,7 +274,7 @@ end
 	@within Signal
 	@method destroy
 
-	disconnects every handler, and stops following the RBXScriptSignal when the
+	disconnects every handler, and stops following the RBXScriptSignal if the
 	signal was made with [Signal.wrap]
 ]=]
 function Signal.destroy<T...>(self: Signal<T...>)

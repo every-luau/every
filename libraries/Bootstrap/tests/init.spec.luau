@@ -6,23 +6,23 @@ require("./roblox")
 
 -- fake instances are tables marked with `instance`, a ModuleScript holding what
 -- requiring it returns
-local originalTypeof = typeof
+local original_typeof = typeof
 ;(_G :: any).typeof = function(value: any): string
 	if type(value) == "table" and rawget(value, "instance") then
 		return "Instance"
 	end
-	return originalTypeof(value)
+	return original_typeof(value)
 end
 
 local Bootstrap = require("../src")
 
-local function moduleScript(name: string, returns: any): any
+local function module_script(name: string, returns: any): any
 	return {
 		instance = true,
 		Name = name,
 		returns = returns,
-		IsA = function(_, className: string)
-			return className == "ModuleScript"
+		IsA = function(_, class_name: string)
+			return class_name == "ModuleScript"
 		end,
 	}
 end
@@ -40,7 +40,7 @@ local function folder(children: { any }): any
 end
 
 -- `Bootstrap.load` requires the fake ModuleScripts through the global `require`
-local originalRequire = require
+local original_require = require
 ;(_G :: any).require = function(target: any, ...: any): any
 	if type(target) == "table" then
 		if target.returns == "error" then
@@ -48,7 +48,7 @@ local originalRequire = require
 		end
 		return target.returns
 	end
-	return originalRequire(target, ...)
+	return original_require(target, ...)
 end
 
 describe("Bootstrap", function()
@@ -60,11 +60,11 @@ describe("Bootstrap", function()
 			local second = {}
 
 			local container = folder({
-				moduleScript("Low", low),
-				moduleScript("First", first),
+				module_script("Low", low),
+				module_script("First", first),
 				folder({}),
-				moduleScript("High", high),
-				moduleScript("Second", second),
+				module_script("High", high),
+				module_script("Second", second),
 			})
 
 			local modules = Bootstrap.load(container):unwrap()
@@ -73,12 +73,12 @@ describe("Bootstrap", function()
 
 		it("only keeps tables, giving them their instance", function()
 			local service = {}
-			local script = moduleScript("Service", service)
+			local script = module_script("Service", service)
 			local frozen = table.freeze({})
 
 			local modules = Bootstrap.load({
-				folder({ script, moduleScript("Number", 5) }),
-				folder({ moduleScript("Frozen", frozen) }),
+				folder({ script, module_script("Number", 5) }),
+				folder({ module_script("Frozen", frozen) }),
 			}):unwrap()
 
 			expect(#modules).toBe(2)
@@ -88,7 +88,7 @@ describe("Bootstrap", function()
 
 		it("filters module scripts with the predicate", function()
 			local kept = {}
-			local modules = Bootstrap.load(folder({ moduleScript("KeptService", kept), moduleScript("Other", {}) }), function(module)
+			local modules = Bootstrap.load(folder({ module_script("KeptService", kept), module_script("Other", {}) }), function(module)
 				return module.Name:match("Service$") ~= nil
 			end):unwrap()
 
@@ -96,7 +96,7 @@ describe("Bootstrap", function()
 		end)
 
 		it("rejects when a module errors", function()
-			local future = Bootstrap.load(folder({ moduleScript("Broken", "error") }))
+			local future = Bootstrap.load(folder({ module_script("Broken", "error") }))
 			expect(future:get_status()).toBe("rejected")
 			expect(function()
 				future:unwrap()

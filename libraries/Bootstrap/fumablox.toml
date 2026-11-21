@@ -1,6 +1,5 @@
 title = "Bootstrap"
-description = "Requires ModuleScripts and calls their hooks in order of priority."
-emoji = "🚀"
+description = "Bootstrap requires ModuleScripts and calls their hooks in order of priority."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

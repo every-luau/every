@@ -1,18 +1,11 @@
 --[=[
 	@class Connection
 
-	a handle that runs some cleanup once, when it is disconnected
+	Connection is like Roblox's RBXScriptConnection, but for your own code
 
-	it is what [Signal:connect] and [Observable:subscribe] return, and what a
-	library can return from anything that has to be undone later. the cleanup is
-	either a function, called on a recycled thread (see Thread), or a [Void],
-	cleaned with every item it holds
-
-	:::info
-	disconnecting twice does nothing the second time, so the cleanup never runs
-	more than once. a Connection has `disconnect` and `destroy` methods, so it can
-	be added to a [Void]
-	:::
+	create it with a function, a [Void] or an RBXScriptConnection, then return it
+	from anything that has to be undone later. disconnecting calls the function,
+	cleans the Void or disconnects the RBXScriptConnection
 
 	```lua
 	local Connection = require(path.to.Connection)
@@ -25,6 +18,11 @@
 	connection:disconnect() --> cleaned up
 	print(connection.connected) --> false
 	```
+
+	:::info
+	disconnecting twice does nothing. the function runs on a recycled thread with
+	[Thread], so it can yield
+	:::
 ]=]
 
 const Void = require(script.Parent.Void)
@@ -32,12 +30,12 @@ const Thread = require(script.Parent.Thread)
 
 --[=[
 	@within Connection
-	@type CleanupItem () -> () | Void
+	@type CleanupItem (() -> ()) | Void | RBXScriptConnection
 
-	what a Connection runs when it is disconnected: a function, or a [Void] to
-	clean
+	what a Connection runs when it is disconnected: a function, a [Void] to clean,
+	or an RBXScriptConnection to disconnect
 ]=]
-type CleanupItem = () -> () | Void.Void
+type CleanupItem = (() -> ()) | Void.Void | RBXScriptConnection
 export type Connection = {
 	_cleanup: CleanupItem,
 	connected: boolean,
@@ -54,8 +52,7 @@ Connection.__index = Connection
 	@prop connected boolean
 	@readonly
 
-	whether the connection is still connected. it starts true and becomes false
-	once [Connection:disconnect] is called
+	true until [Connection:disconnect] is called
 ]=]
 
 --[=[
@@ -74,14 +71,14 @@ Connection.__index = Connection
 	connection:disconnect() -- cleans the void
 	```
 ]=]
-function Connection.new(cleanup_item: CleanupItem)
+function Connection.new(cleanup_item: CleanupItem): Connection
 	return setmetatable(
 		{
 			_cleanup = cleanup_item,
 			connected = true,
 		},
 		Connection
-	)
+	) :: any
 end
 
 --[=[
@@ -100,10 +97,10 @@ end
 	@within Connection
 	@method disconnect
 
-	marks the connection as disconnected and runs its cleanup: a function is
-	called on a recycled thread, so a cleanup that yields doesn't hold up the
-	caller, and a [Void] is cleaned right away. does nothing if it is already
-	disconnected
+	sets `connected` to false and runs the cleanup. a function runs on a recycled
+	thread, so it can yield without holding up the caller. a [Void] is cleaned and
+	an RBXScriptConnection disconnected right away. does nothing if the connection
+	is already disconnected
 ]=]
 function Connection.disconnect(self: Connection)
 	if not self.connected then
@@ -111,11 +108,14 @@ function Connection.disconnect(self: Connection)
 	end
 
 	self.connected = false
+	const cleanup = self._cleanup
 
-	if type(self._cleanup) == "function" then
-		Thread(self._cleanup)
+	if type(cleanup) == "function" then
+		Thread(cleanup)
+	elseif typeof(cleanup) == "RBXScriptConnection" then
+		cleanup:Disconnect()
 	else
-		self._cleanup:destroy()
+		cleanup:destroy()
 	end
 end
 
@@ -123,8 +123,7 @@ end
 	@within Connection
 	@method destroy
 
-	the same as Connection:disconnect(), so a Connection can be added to anything
-	that cleans objects through a `destroy` method, a [Void] included
+	the same as [Connection:disconnect], so a Connection can be added to a [Void]
 ]=]
 Connection.destroy = Connection.disconnect
 

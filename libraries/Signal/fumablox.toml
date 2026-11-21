@@ -1,6 +1,5 @@
 title = "Signal"
-description = "A yield-safe signal whose handlers run on a recycled thread."
-emoji = "🔔"
+description = "Signal is a yield-safe signal whose handlers run on a recycled thread."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

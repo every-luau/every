@@ -1,7 +1,7 @@
 [package]
 name = "every/thread"
 version = "0.0.1"
-description = "Runs callbacks on a recycled thread instead of creating a new one per call."
+description = "Thread runs callbacks on a recycled thread instead of creating a new one per call."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

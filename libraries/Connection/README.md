@@ -1,8 +1,8 @@
-# 🔌 Connection
+# Connection
 
-A handle that runs its cleanup once, when disconnected.
+Connection is like Roblox's RBXScriptConnection, but for your own code
 
-It is what [Signal](https://every-luau.github.io/docs/signal) and [Observable](https://every-luau.github.io/docs/observable) return when connecting or subscribing. The cleanup is either a function, called on a recycled thread, or a [Void](https://every-luau.github.io/docs/void) to clean.
+create it with a function, a [Void](https://every-luau.github.io/docs/void) or an RBXScriptConnection, then return it from anything that has to be undone later. disconnecting calls the function, cleans the Void or disconnects the RBXScriptConnection
 
 **[Documentation](https://every-luau.github.io/docs/connection)**
 
@@ -17,7 +17,7 @@ Connection = { name = "every/connection", version = "^0.0.1" }
 embr install
 ```
 
-Installs [Void](https://every-luau.github.io/docs/void) and [Thread](https://every-luau.github.io/docs/thread) with it.
+installs [Void](https://every-luau.github.io/docs/void) and [Thread](https://every-luau.github.io/docs/thread) with it
 
 ## Usage
 

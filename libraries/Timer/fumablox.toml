@@ -1,6 +1,5 @@
 title = "Timer"
-description = "A stopwatch or countdown with a speed, updated every frame."
-emoji = "⏱️"
+description = "Timer is a stopwatch or countdown with a speed, updated every frame."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

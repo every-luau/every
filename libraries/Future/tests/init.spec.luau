@@ -168,13 +168,13 @@ describe("Future", function()
 	end)
 
 	it("collects every value with all", function()
-		local a, passA = manual()
-		local b, passB = manual()
+		local a, pass_a = manual()
+		local b, pass_b = manual()
 		local all = Future.all({ a, b })
 
-		passB("b")
+		pass_b("b")
 		expect(all:is_pending()).toBe(true)
-		passA("a")
+		pass_a("a")
 		expect(all:unwrap()).toEqual({ "a", "b" })
 	end)
 
@@ -185,10 +185,10 @@ describe("Future", function()
 
 	it("settles like the first with race", function()
 		local a = manual()
-		local b, passB = manual()
+		local b, pass_b = manual()
 		local race = Future.race({ a, b })
 
-		passB("b")
+		pass_b("b")
 		expect(race:unwrap()).toBe("b")
 	end)
 

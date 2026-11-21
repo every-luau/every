@@ -1,6 +1,5 @@
 title = "Void"
-description = "Keeps track of things to clean up, and cleans them all at once."
-emoji = "🕳️"
+description = "Void keeps track of things to clean up, and cleans them all at once."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

@@ -4,13 +4,11 @@
 --[=[
 	@class Thread
 
-	runs callbacks on recycled threads instead of creating a new one per call
+	Thread runs callbacks on a recycled thread instead of creating a new one per call
 
-	`task.spawn(callback)` allocates a coroutine every time. this module keeps a
-	pool of idle threads and hands callbacks to them; a new thread is only created
-	when every idle one is busy because their callbacks yielded
-
-	the module can be called directly, which is the same as [Thread.spawn]
+	use it like `task.spawn`, by calling the module or [Thread.spawn]. idle
+	threads are reused, and a new one is only created when every idle thread is
+	busy with a callback that yielded
 
 	```lua
 	local Thread = require(path.to.Thread)
@@ -22,11 +20,7 @@
 
 export type Spawn = <T...>(callback: (T...) -> (), T...) -> thread
 
-export type Thread = setmetatable<{
-	spawn: Spawn,
-	idle: { thread },
-	runner: () -> (),
-}, {
+export type Thread = setmetatable<{ spawn: Spawn, idle: { thread }, runner: () -> () }, {
 	__call: <T...>(self: any, callback: (T...) -> (), T...) -> thread,
 }>
 
@@ -70,13 +64,13 @@ end
 	@param ... T...
 	@return thread
 
-	runs `callback(...)` immediately on an idle thread, creating one if none is
-	free, and returns the thread `callback` ran on
+	runs `callback(...)` right away on an idle thread, or on a new one if none is
+	free, and returns that thread
 
 	:::info
-	if `callback` yields, the thread it ran on stays busy until it finishes, and
-	the next call takes another idle thread. once a callback finishes, its thread
-	goes back to the pool
+	a callback that yields keeps its thread busy until it finishes, so the next
+	call takes another one. the thread goes back to the pool once its callback
+	finishes
 	:::
 
 	```lua
@@ -106,10 +100,10 @@ end
 	@prop idle { thread }
 	@readonly
 
-	the pool of idle threads, shared so other libraries can take a thread without
-	calling [Thread.spawn] for every callback. take the last one, remove it, then
-	resume it with `task.spawn(thread, thread, callback, ...)`. when the pool is
-	empty, create one with `coroutine.create(Thread.runner)` and resume it once
+	the pool of idle threads, for code that wants to reuse them without calling
+	[Thread.spawn]. take the last thread out of the pool and resume it with
+	`task.spawn(thread, thread, callback, ...)`. when the pool is empty, create
+	one with `coroutine.create(Thread.runner)` and resume it once first
 ]=]
 
 --[=[
@@ -120,12 +114,17 @@ end
 	the body of every pooled thread, see [Thread.idle]
 ]=]
 
-return table.freeze(setmetatable({
-	spawn = spawn,
-	idle = idle,
-	runner = runner,
-}, {
-	__call = function<T...>(_, callback: (T...) -> (), ...: T...): thread
-		return spawn(callback, ...)
-	end,
-})) :: Thread
+return table.freeze(
+	setmetatable(
+		{
+			spawn = spawn,
+			idle = idle,
+			runner = runner,
+		},
+		{
+			__call = function<T...>(_, callback: (T...) -> (), ...: T...): thread
+				return spawn(callback, ...)
+			end,
+		}
+	)
+) :: Thread

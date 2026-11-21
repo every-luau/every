@@ -50,21 +50,21 @@ function Signal:Fire(...)
 	end
 end
 
--- a userdata the patched `typeof` below reports as `typeName`
-local function datatype(typeName: string, fields: { [string]: any })
+-- a userdata the patched `typeof` below reports as `type_name`
+local function datatype(type_name: string, fields: { [string]: any })
 	local proxy = newproxy(true)
 	local metatable = getmetatable(proxy)
-	metatable.__type = typeName
+	metatable.__type = type_name
 	metatable.__index = fields
 	return proxy
 end
 
 local function enum(names: { string })
-	local enumType = {}
+	local enum_type = {}
 	for _, name in names do
-		enumType[name] = datatype("EnumItem", { Name = name, EnumType = enumType })
+		enum_type[name] = datatype("EnumItem", { Name = name, EnumType = enum_type })
 	end
-	return enumType
+	return enum_type
 end
 
 local Enum = {
@@ -92,9 +92,9 @@ local SUPERCLASSES = {
 
 local Instance = {}
 
-local function new(className: string, parent: any?)
+local function new(class_name: string, parent: any?)
 	local self
-	local properties = { ClassName = className, Name = className, Parent = nil }
+	local properties = { ClassName = class_name, Name = class_name, Parent = nil }
 	local changed = {}
 	local attributes = {}
 
@@ -145,13 +145,13 @@ local function new(className: string, parent: any?)
 	return self
 end
 
-function Instance.IsA(self, className)
-	return self.ClassName == className or table.find(SUPERCLASSES[self.ClassName] or {}, className) ~= nil
+function Instance.IsA(self, class_name)
+	return self.ClassName == class_name or table.find(SUPERCLASSES[self.ClassName] or {}, class_name) ~= nil
 end
 
-function Instance.FindFirstAncestorWhichIsA(self, className)
+function Instance.FindFirstAncestorWhichIsA(self, class_name)
 	local ancestor = self.Parent
-	while ancestor and not ancestor:IsA(className) do
+	while ancestor and not ancestor:IsA(class_name) do
 		ancestor = ancestor.Parent
 	end
 	return ancestor
@@ -222,9 +222,9 @@ local function screen(width: number, height: number)
 	local gui = new("ScreenGui")
 	gui.AbsoluteSize = Vector2.new(width, height)
 	local frame = new("Frame", gui)
-	local uiScale = new("UIScale", frame)
-	uiScale.Scale = 1
-	return uiScale, gui
+	local ui_scale = new("UIScale", frame)
+	ui_scale.Scale = 1
+	return ui_scale, gui
 end
 
 local globals = _G :: any
@@ -248,7 +248,7 @@ globals.game = {
 }
 -- instances here are tables and datatypes plain userdata, so `typeof` is taught
 -- their names
-local builtinTypeof = typeof
+local builtin_typeof = typeof
 globals.typeof = function(value)
 	if type(value) == "table" and rawget(value, "_children") then
 		return "Instance"
@@ -258,7 +258,7 @@ globals.typeof = function(value)
 			return metatable.__type
 		end
 	end
-	return builtinTypeof(value)
+	return builtin_typeof(value)
 end
 globals.Enum = Enum
 globals.NumberRange = NumberRange

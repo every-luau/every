@@ -3,11 +3,11 @@
 --[=[
 	@class Observable
 
-	a reactive stream of values: wrap anything that produces values, then
-	`subscribe`, `map`, `filter` or `changed` it
+	Observable is a reactive stream of values to subscribe to, map, filter and dedupe
 
-	an observable is cold: nothing runs until something subscribes, and each
-	subscription runs the producer again
+	create one from a signal with [Observable.from_signal] or from any producer
+	with [Observable.new], chain `map`, `filter` and `changed`, then subscribe.
+	subscribing returns a [Connection]
 
 	```lua
 	local Observable = require(path.to.Observable)
@@ -23,6 +23,11 @@
 
 	connection:disconnect()
 	```
+
+	:::info
+	an observable is cold: nothing runs until something subscribes, and each
+	subscription runs the producer again
+	:::
 ]=]
 
 const Connection = require(script.Parent.Connection)
@@ -35,8 +40,8 @@ export type Connection = Connection.Connection
 	@within Observable
 	@type Producer (emit: (T) -> ()) -> (() -> ())?
 
-	calls `emit` once per value. it can return a function, called when the
-	subscription that ran it ends
+	calls `emit` once per value, and can return a function that runs when the
+	subscription ends
 ]=]
 export type Producer<T> = (emit: (T) -> ()) -> (() -> ())?
 
@@ -44,7 +49,7 @@ export type Producer<T> = (emit: (T) -> ()) -> (() -> ())?
 	@within Observable
 	@type Operator (source: Observable<T>) -> Observable<U>
 
-	a function creating an observable from another, see [Observable:use]
+	a function that makes an observable from another one, see [Observable:use]
 ]=]
 export type Operator<T, U> = (source: Observable<T>) -> Observable<U>
 
@@ -64,9 +69,8 @@ export type Observable<T> = setmetatable<{
 	@within Observable
 	@type SignalLike RBXScriptSignal | Signal<...any> | { Connect: (self, (...any) -> ()) -> any }
 
-	anything [Observable.from_signal] can follow: an RBXScriptSignal, a [Signal],
-	or any table with a `Connect` method returning something with a `Disconnect`
-	method
+	what [Observable.from_signal] can follow: an RBXScriptSignal, a [Signal], or
+	a table whose `Connect` method returns something with a `Disconnect` method
 ]=]
 export type SignalLike = RBXScriptSignal | Signal.Signal<...any> | { Connect: (any, (...any) -> ()) -> any }
 
@@ -141,11 +145,11 @@ end
 	@return Observable<T>
 	@error "Cannot observe value of type '...'" -- `signal` is not a [SignalLike]
 
-	creates an observable that connects to `signal` for every subscription, and
+	creates an observable that connects to `signal` for each subscription, and
 	disconnects when the subscription ends
 
-	each fire emits its first value, or what `transform` returns when called with
-	every fired value
+	each fire emits its first value, or `transform(...)` with every fired value
+	when `transform` is given
 
 	```lua
 	local health = Observable.from_signal(humanoid.HealthChanged)
@@ -198,13 +202,13 @@ end
 	@return Connection
 
 	runs the producer and calls `listener` with every value it emits, until the
-	returned [Connection] is disconnected. disconnecting calls the producer's
-	cleanup, and values emitted afterwards are dropped
+	returned [Connection] is disconnected. disconnecting runs the producer's
+	cleanup and drops any value emitted after it
 
 	:::info
-	`listener` is called on the thread that emitted, so values arrive in order
-	and derived observables see them right away. a producer can emit while it
-	runs, so `listener` may be called before `subscribe` returns
+	`listener` runs on the thread that emitted, so values arrive in order. a
+	producer can emit while it runs, so `listener` may be called before
+	`subscribe` returns
 	:::
 ]=]
 function Observable.subscribe<T>(self: Observable<T>, listener: (T) -> ()): Connection
@@ -254,8 +258,7 @@ end
 	@param operator Operator<T, U>
 	@return Observable<U>
 
-	returns `operator(self)`, so operators made outside the library chain like
-	the built-in ones
+	returns `operator(self)`, so your own operators chain like `map` and `filter`
 
 	```lua
 	local function doubled(source)
@@ -311,8 +314,8 @@ end
 	@param equals ((T, T) -> boolean)?
 	@return Observable<T>
 
-	returns an observable that skips values equal to the one it emitted last.
-	values are compared with `==` unless `equals` is given
+	returns an observable that skips a value equal to the last one it emitted,
+	compared with `==` or with `equals` when it is given
 
 	:::info
 	the first value is always emitted, and each subscription remembers its own
@@ -340,8 +343,8 @@ end
 	@within Observable
 	@method destroy
 
-	disconnects every subscription to this observable. it can still be
-	subscribed to afterwards, and observables made from it keep working
+	disconnects every subscription to this observable. you can still subscribe
+	to it afterwards, and observables made from it keep working
 ]=]
 function Observable.destroy<T>(self: Observable<T>): ()
 	self._subscriptions:clean()

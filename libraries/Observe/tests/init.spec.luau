@@ -106,8 +106,8 @@ describe("Observe", function()
 			return Observe.tag("Lava", callback)
 		end)
 
-		roblox.addTag(part, "Lava")
-		roblox.removeTag(part, "Lava")
+		roblox.add_tag(part, "Lava")
+		roblox.remove_tag(part, "Lava")
 		expect(events).toEqual({ "+Lava", "-Lava" })
 	end)
 
@@ -119,10 +119,10 @@ describe("Observe", function()
 			return Observe.characters(callback)
 		end)
 
-		local player = roblox.addPlayer("Bob")
-		roblox.spawnCharacter(player)
-		roblox.spawnCharacter(player)
-		roblox.removePlayer(player)
+		local player = roblox.add_player("Bob")
+		roblox.spawn_character(player)
+		roblox.spawn_character(player)
+		roblox.remove_player(player)
 
 		expect(players).toEqual({ "+Bob", "-Bob" })
 		expect(characters).toEqual({ "+Bob", "-Bob", "+Bob", "-Bob" })
@@ -136,14 +136,14 @@ describe("Observe", function()
 			return player.Name == "Kept"
 		end)
 
-		roblox.spawnCharacter(roblox.addPlayer("Kept"))
-		roblox.spawnCharacter(roblox.addPlayer("Skipped"))
+		roblox.spawn_character(roblox.add_player("Kept"))
+		roblox.spawn_character(roblox.add_player("Skipped"))
 		expect(seen).toEqual({ "Kept" })
 	end)
 
 	it("keeps a tool while it moves between the backpack and the character", function()
-		local player = roblox.addPlayer("Alice")
-		local character = roblox.spawnCharacter(player)
+		local player = roblox.add_player("Alice")
+		local character = roblox.spawn_character(player)
 
 		local events = journal(function(callback)
 			return Observe.tools(player, callback)
@@ -159,15 +159,15 @@ describe("Observe", function()
 	end)
 
 	it("follows the new backpack after a respawn", function()
-		local player = roblox.addPlayer("Carl")
-		roblox.spawnCharacter(player)
+		local player = roblox.add_player("Carl")
+		roblox.spawn_character(player)
 
 		local events = journal(function(callback)
 			return Observe.tools(player, callback)
 		end)
 
 		roblox.new("Tool", "Old", player:FindFirstChildOfClass("Backpack"))
-		roblox.spawnCharacter(player)
+		roblox.spawn_character(player)
 		roblox.new("Tool", "New", player:FindFirstChildOfClass("Backpack"))
 
 		expect(events).toEqual({ "+Old", "-Old", "+New" })

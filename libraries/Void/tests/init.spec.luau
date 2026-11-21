@@ -100,16 +100,16 @@ describe("Void", function()
 
 	it("cleans a single item with clean_item", function()
 		local void = Void.new()
-		local first, firstCount = cleanable("destroy")
-		local second, secondCount = cleanable("destroy")
+		local first, first_count = cleanable("destroy")
+		local second, second_count = cleanable("destroy")
 		void:add(first)
 		void:add(second)
 
 		void:clean_item(first)
 		void:clean_item(first)
 
-		expect(firstCount()).toBe(1)
-		expect(secondCount()).toBe(0)
+		expect(first_count()).toBe(1)
+		expect(second_count()).toBe(0)
 		expect(#void:get_items()).toBe(1)
 	end)
 
@@ -130,14 +130,14 @@ describe("Void", function()
 		local made = void:construct(function(method: string)
 			return (cleanable(method))
 		end, "destroy")
-		local fromClass = void:construct({
+		local from_class = void:construct({
 			new = function()
 				return (cleanable("disconnect"))
 			end,
 		})
 
 		expect(type(made.destroy)).toBe("function")
-		expect(type(fromClass.disconnect)).toBe("function")
+		expect(type(from_class.disconnect)).toBe("function")
 		expect(#void:get_items()).toBe(2)
 	end)
 

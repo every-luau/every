@@ -1,8 +1,8 @@
-# 📡 Observable
+# Observable
 
-A reactive stream of values to subscribe to, map, filter and dedupe.
+Observable is a reactive stream of values to subscribe to, map, filter and dedupe
 
-Observables are cold: nothing runs until something subscribes, and each subscription runs its producer again. Subscribing returns a [Connection](https://every-luau.github.io/docs/connection).
+create one from a signal with `Observable.from_signal` or from any producer with `Observable.new`, chain `map`, `filter` and `changed`, then subscribe. subscribing returns a [Connection](https://every-luau.github.io/docs/connection)
 
 **[Documentation](https://every-luau.github.io/docs/observable)**
 
@@ -17,7 +17,7 @@ Observable = { name = "every/observable", version = "^0.0.1" }
 embr install
 ```
 
-Installs [Connection](https://every-luau.github.io/docs/connection), [Signal](https://every-luau.github.io/docs/signal) and [Void](https://every-luau.github.io/docs/void) with it.
+installs [Connection](https://every-luau.github.io/docs/connection), [Signal](https://every-luau.github.io/docs/signal) and [Void](https://every-luau.github.io/docs/void) with it
 
 ## Usage
 

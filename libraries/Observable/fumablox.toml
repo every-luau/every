@@ -1,6 +1,5 @@
 title = "Observable"
-description = "A reactive stream of values to subscribe to, map, filter and dedupe."
-emoji = "📡"
+description = "Observable is a reactive stream of values to subscribe to, map, filter and dedupe."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

@@ -1,8 +1,8 @@
-# 🧵 Thread
+# Thread
 
-Runs callbacks on a recycled thread instead of creating a new one per call.
+Thread runs callbacks on a recycled thread instead of creating a new one per call
 
-`task.spawn(callback)` allocates a coroutine every time. Thread keeps a pool of idle threads and hands callbacks to them; a new thread is only created when every idle one is busy because its callback yielded.
+use it like `task.spawn`, by calling the module or `Thread.spawn`. idle threads are reused, and a new one is only created when every idle thread is busy with a callback that yielded
 
 **[Documentation](https://every-luau.github.io/docs/thread)**
 

@@ -1,8 +1,8 @@
-# 🕳️ Void
+# Void
 
-Keeps track of things to clean up, and cleans them all at once.
+Void keeps track of things to clean up, and cleans them all at once
 
-Every item is cleaned the way its type expects: instances are destroyed, connections disconnected, threads cancelled, functions called, and tables have their `Destroy`, `Disconnect`, `destroy` or `disconnect` method called.
+add what a feature creates as you go, then call `clean` when it ends. instances are destroyed, connections disconnected, threads cancelled, functions called with [Thread](https://every-luau.github.io/docs/thread), and objects have their `Destroy`, `Disconnect`, `destroy` or `disconnect` method called
 
 **[Documentation](https://every-luau.github.io/docs/void)**
 
@@ -17,7 +17,7 @@ Void = { name = "every/void", version = "^0.0.1" }
 embr install
 ```
 
-Installs [Thread](https://every-luau.github.io/docs/thread) with it.
+installs [Thread](https://every-luau.github.io/docs/thread) with it
 
 ## Usage
 

@@ -15,35 +15,35 @@ describe("BetterScale", function()
 	end)
 
 	it("follows a single axis", function()
-		local uiScale = roblox.screen(2560, 360)
+		local ui_scale = roblox.screen(2560, 360)
 
-		uiScale:SetAttribute("Direction", Enum.AutomaticSize.X)
-		expect(BetterScale.new(uiScale):get_scale()).toBe(2)
+		ui_scale:SetAttribute("Direction", Enum.AutomaticSize.X)
+		expect(BetterScale.new(ui_scale):get_scale()).toBe(2)
 
-		uiScale:SetAttribute("Direction", Enum.AutomaticSize.Y)
-		expect(BetterScale.new(uiScale):get_scale()).toBe(0.5)
+		ui_scale:SetAttribute("Direction", Enum.AutomaticSize.Y)
+		expect(BetterScale.new(ui_scale):get_scale()).toBe(0.5)
 	end)
 
 	it("only uses the ratio without a direction", function()
-		local uiScale = roblox.screen(2560, 1440)
-		uiScale:SetAttribute("Direction", Enum.AutomaticSize.None)
-		uiScale:SetAttribute("Ratio", 3)
-		uiScale:SetAttribute("Range", NumberRange.new(0, 2))
-		expect(BetterScale.new(uiScale):get_scale()).toBe(2)
+		local ui_scale = roblox.screen(2560, 1440)
+		ui_scale:SetAttribute("Direction", Enum.AutomaticSize.None)
+		ui_scale:SetAttribute("Ratio", 3)
+		ui_scale:SetAttribute("Range", NumberRange.new(0, 2))
+		expect(BetterScale.new(ui_scale):get_scale()).toBe(2)
 	end)
 
 	it("clamps to the range, then multiplies by the ratio", function()
-		local uiScale = roblox.screen(3840, 2160)
-		uiScale:SetAttribute("Range", NumberRange.new(0.5, 2))
-		uiScale:SetAttribute("Ratio", 1.5)
-		uiScale:SetAttribute("Resolution", Vector2.new(960, 540))
-		expect(BetterScale.new(uiScale):get_scale()).toBe(3)
+		local ui_scale = roblox.screen(3840, 2160)
+		ui_scale:SetAttribute("Range", NumberRange.new(0.5, 2))
+		ui_scale:SetAttribute("Ratio", 1.5)
+		ui_scale:SetAttribute("Resolution", Vector2.new(960, 540))
+		expect(BetterScale.new(ui_scale):get_scale()).toBe(3)
 	end)
 
 	it("multiplies the ratio for the display size", function()
-		local uiScale = roblox.screen(1280, 720)
-		uiScale:SetAttribute("DisplayRatios", '{"Small": 1.5, "Large": 0.5}')
-		local scale = BetterScale.new(uiScale)
+		local ui_scale = roblox.screen(1280, 720)
+		ui_scale:SetAttribute("DisplayRatios", '{"Small": 1.5, "Large": 0.5}')
+		local scale = BetterScale.new(ui_scale)
 
 		roblox.GuiService.ViewportDisplaySize = Enum.DisplaySize.Small
 		expect(scale:get_scale()).toBe(1.5)
@@ -51,7 +51,7 @@ describe("BetterScale", function()
 		roblox.GuiService.ViewportDisplaySize = Enum.DisplaySize.Medium
 		expect(scale:get_scale()).toBe(1)
 
-		uiScale:SetAttribute("DisplayRatios", "not json")
+		ui_scale:SetAttribute("DisplayRatios", "not json")
 		roblox.GuiService.ViewportDisplaySize = Enum.DisplaySize.Small
 		expect(scale:get_scale()).toBe(1)
 
@@ -59,13 +59,13 @@ describe("BetterScale", function()
 	end)
 
 	it("ignores attributes of the wrong type", function()
-		local uiScale = roblox.screen(1280, 720)
-		uiScale:SetAttribute("Ratio", "big")
-		uiScale:SetAttribute("Range", 5)
-		uiScale:SetAttribute("Resolution", Enum.AutomaticSize.X)
-		uiScale:SetAttribute("Direction", Enum.DisplaySize.Small)
+		local ui_scale = roblox.screen(1280, 720)
+		ui_scale:SetAttribute("Ratio", "big")
+		ui_scale:SetAttribute("Range", 5)
+		ui_scale:SetAttribute("Resolution", Enum.AutomaticSize.X)
+		ui_scale:SetAttribute("Direction", Enum.DisplaySize.Small)
 
-		local attributes = BetterScale.new(uiScale):get_attributes()
+		local attributes = BetterScale.new(ui_scale):get_attributes()
 		expect(attributes.Ratio).toBe(1)
 		expect(attributes.Range.Max).toBe(math.huge)
 		expect(attributes.Resolution.X).toBe(1280)
@@ -73,78 +73,78 @@ describe("BetterScale", function()
 	end)
 
 	it("does nothing outside of a gui", function()
-		local uiScale = roblox.new("UIScale")
-		uiScale.Scale = 1
-		local scale = BetterScale.new(uiScale)
+		local ui_scale = roblox.new("UIScale")
+		ui_scale.Scale = 1
+		local scale = BetterScale.new(ui_scale)
 
 		expect(scale:get_scale()).toBeNil()
 		scale:update()
-		expect(uiScale.Scale).toBe(1)
+		expect(ui_scale.Scale).toBe(1)
 	end)
 
 	it("tracks the next frame, resizes, attributes and display sizes", function()
-		local uiScale, gui = roblox.screen(1920, 1080)
-		uiScale:SetAttribute("DisplayRatios", '{"Small": 2}')
-		local scale = BetterScale.build(uiScale)
+		local ui_scale, gui = roblox.screen(1920, 1080)
+		ui_scale:SetAttribute("DisplayRatios", '{"Small": 2}')
+		local scale = BetterScale.build(ui_scale)
 
-		expect(uiScale.Scale).toBe(1)
+		expect(ui_scale.Scale).toBe(1)
 		roblox.render()
-		expect(uiScale.Scale).toBe(1.5)
+		expect(ui_scale.Scale).toBe(1.5)
 
 		gui.AbsoluteSize = Vector2.new(640, 360)
-		expect(uiScale.Scale).toBe(0.5)
+		expect(ui_scale.Scale).toBe(0.5)
 
-		uiScale:SetAttribute("Ratio", 2)
-		expect(uiScale.Scale).toBe(1)
+		ui_scale:SetAttribute("Ratio", 2)
+		expect(ui_scale.Scale).toBe(1)
 
 		roblox.GuiService.ViewportDisplaySize = Enum.DisplaySize.Small
-		expect(uiScale.Scale).toBe(2)
+		expect(ui_scale.Scale).toBe(2)
 		roblox.GuiService.ViewportDisplaySize = Enum.DisplaySize.Medium
 
 		scale:untrack()
 		expect(scale:is_tracking()).toBe(false)
 		gui.AbsoluteSize = Vector2.new(1280, 720)
-		expect(uiScale.Scale).toBe(1)
+		expect(ui_scale.Scale).toBe(1)
 	end)
 
 	it("follows the UIScale into another gui", function()
-		local uiScale, first = roblox.screen(1280, 720)
+		local ui_scale, first = roblox.screen(1280, 720)
 		local _, second = roblox.screen(2560, 1440)
-		BetterScale.build(uiScale)
+		BetterScale.build(ui_scale)
 
-		uiScale.Parent = second
-		expect(uiScale.Scale).toBe(2)
+		ui_scale.Parent = second
+		expect(ui_scale.Scale).toBe(2)
 
 		first.AbsoluteSize = Vector2.new(640, 360)
-		expect(uiScale.Scale).toBe(2)
+		expect(ui_scale.Scale).toBe(2)
 
 		second.AbsoluteSize = Vector2.new(1920, 1080)
-		expect(uiScale.Scale).toBe(1.5)
+		expect(ui_scale.Scale).toBe(1.5)
 	end)
 
 	it("uses the closest gui", function()
-		local uiScale, gui = roblox.screen(1280, 720)
+		local ui_scale, gui = roblox.screen(1280, 720)
 		local surface = roblox.new("SurfaceGui", gui)
 		surface.AbsoluteSize = Vector2.new(2560, 1440)
-		uiScale.Parent = surface
+		ui_scale.Parent = surface
 
-		expect(BetterScale.new(uiScale):get_container()).toBe(surface)
+		expect(BetterScale.new(ui_scale):get_container()).toBe(surface)
 	end)
 
 	it("is destroyed once the UIScale is removed", function()
-		local uiScale, gui = roblox.screen(1280, 720)
-		local scale = BetterScale.build(uiScale)
+		local ui_scale, gui = roblox.screen(1280, 720)
+		local scale = BetterScale.build(ui_scale)
 
-		uiScale.Parent = nil
+		ui_scale.Parent = nil
 		expect(scale:is_tracking()).toBe(false)
 
-		uiScale.Parent = gui
+		ui_scale.Parent = gui
 		gui.AbsoluteSize = Vector2.new(2560, 1440)
-		expect(uiScale.Scale).toBe(1)
+		expect(ui_scale.Scale).toBe(1)
 
 		scale:track()
 		gui.AbsoluteSize = Vector2.new(1920, 1080)
-		expect(uiScale.Scale).toBe(1.5)
+		expect(ui_scale.Scale).toBe(1.5)
 	end)
 
 	it("errors without a UIScale", function()

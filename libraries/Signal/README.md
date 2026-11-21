@@ -1,8 +1,8 @@
-# 🔔 Signal
+# Signal
 
-A yield-safe signal whose handlers run on a recycled thread.
+Signal is a yield-safe signal whose handlers run on a recycled thread
 
-Handlers are stored in a linked list, so connecting and disconnecting never walk it. A handler that yields doesn't hold up the others, and connections can be added to a [Void](https://every-luau.github.io/docs/void).
+connect handlers, then fire values to all of them. each handler runs with [Thread](https://every-luau.github.io/docs/thread), so one that yields doesn't hold up the others, and connecting returns a [Connection](https://every-luau.github.io/docs/connection) that removes it
 
 **[Documentation](https://every-luau.github.io/docs/signal)**
 
@@ -17,7 +17,7 @@ Signal = { name = "every/signal", version = "^0.0.1" }
 embr install
 ```
 
-Installs [Thread](https://every-luau.github.io/docs/thread) and [Connection](https://every-luau.github.io/docs/connection) with it.
+installs [Thread](https://every-luau.github.io/docs/thread) and [Connection](https://every-luau.github.io/docs/connection) with it
 
 ## Usage
 

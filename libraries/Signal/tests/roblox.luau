@@ -50,29 +50,29 @@ local function flush()
 	end
 end
 
-local heartbeatListeners: { [(deltaTime: number) -> ()]: true } = {}
+local heartbeat_listeners: { [(delta_time: number) -> ()]: true } = {}
 
 local Heartbeat = {
-	Connect = function(_, listener: (deltaTime: number) -> ())
-		heartbeatListeners[listener] = true
+	Connect = function(_, listener: (delta_time: number) -> ())
+		heartbeat_listeners[listener] = true
 		return {
 			Disconnect = function()
-				heartbeatListeners[listener] = nil
+				heartbeat_listeners[listener] = nil
 			end,
 		}
 	end,
 }
 
--- fires Heartbeat once with `deltaTime`
-local function step(deltaTime: number)
-	for listener in table.clone(heartbeatListeners) do
-		listener(deltaTime)
+-- fires Heartbeat once with `delta_time`
+local function step(delta_time: number)
+	for listener in table.clone(heartbeat_listeners) do
+		listener(delta_time)
 	end
 end
 
 local function listeners(): number
 	local count = 0
-	for _ in heartbeatListeners do
+	for _ in heartbeat_listeners do
 		count += 1
 	end
 	return count

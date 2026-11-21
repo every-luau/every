@@ -1,7 +1,7 @@
 [package]
 name = "every/retryer"
 version = "0.0.1"
-description = "Calls a function again until it stops erroring, with different waits."
+description = "Retryer calls a function again until it stops erroring, with different waits."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

@@ -1,6 +1,5 @@
 title = "Connection"
-description = "A handle that runs its cleanup once, when disconnected."
-emoji = "🔌"
+description = "Connection is like Roblox's RBXScriptConnection, but for your own code."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

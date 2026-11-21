@@ -1,7 +1,7 @@
 [package]
 name = "every/region"
 version = "0.0.1"
-description = "A box that reports what enters and leaves it, every frame, without physics queries."
+description = "Region is a box that reports what enters and leaves it, every frame, without physics queries."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

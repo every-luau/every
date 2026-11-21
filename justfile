@@ -38,11 +38,9 @@ test-all:
 docs lib:
     {{script}} run {{lib}} npx --yes @metricsrb/fumablox@1 check
 
-# Generate every library's docs and run the site locally
-[working-directory('every-luau.github.io')]
+# Generate every library's docs and run the site locally (the site repo is cloned next to libraries/)
 site:
-    npm run generate -- ../libraries
-    npm run dev
+    cd *.github.io; npm run generate -- ../libraries; npm run dev
 
 # Show what ember would publish, without uploading
 dry-run lib:

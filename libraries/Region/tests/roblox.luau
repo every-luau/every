@@ -54,12 +54,12 @@ local SUPERCLASSES = {
 
 local Instance = {}
 
-local function new(className: string, name: string?, parent: any?)
+local function new(class_name: string, name: string?, parent: any?)
 	local self
-	local properties = { ClassName = className, Name = name or className, Parent = nil }
+	local properties = { ClassName = class_name, Name = name or class_name, Parent = nil }
 	local changed = {}
 	local attributes = {}
-	local attributeChanged = {}
+	local attribute_changed = {}
 	local children = {}
 
 	self = setmetatable({
@@ -115,15 +115,15 @@ local function new(className: string, name: string?, parent: any?)
 
 	function self.SetAttribute(_, attribute, value)
 		attributes[attribute] = value
-		local signal = attributeChanged[attribute]
+		local signal = attribute_changed[attribute]
 		if signal then
 			signal:Fire()
 		end
 	end
 
 	function self.GetAttributeChangedSignal(_, attribute)
-		attributeChanged[attribute] = attributeChanged[attribute] or Signal.new()
-		return attributeChanged[attribute]
+		attribute_changed[attribute] = attribute_changed[attribute] or Signal.new()
+		return attribute_changed[attribute]
 	end
 
 	if parent then
@@ -133,11 +133,11 @@ local function new(className: string, name: string?, parent: any?)
 	return self
 end
 
-function Instance.IsA(self, className)
-	if self.ClassName == className then
+function Instance.IsA(self, class_name)
+	if self.ClassName == class_name then
 		return true
 	end
-	return table.find(SUPERCLASSES[self.ClassName] or {}, className) ~= nil
+	return table.find(SUPERCLASSES[self.ClassName] or {}, class_name) ~= nil
 end
 
 function Instance.GetChildren(self)
@@ -156,9 +156,9 @@ function Instance.GetDescendants(self)
 	return descendants
 end
 
-function Instance.FindFirstChildOfClass(self, className)
+function Instance.FindFirstChildOfClass(self, class_name)
 	for _, child in self._children do
-		if child.ClassName == className then
+		if child.ClassName == class_name then
 			return child
 		end
 	end
@@ -228,20 +228,20 @@ function Players.GetPlayers(self)
 end
 
 local tagged: { [string]: { any } } = {}
-local tagAdded: { [string]: any } = {}
-local tagRemoved: { [string]: any } = {}
+local tag_added: { [string]: any } = {}
+local tag_removed: { [string]: any } = {}
 
 local CollectionService = {}
 function CollectionService.GetTagged(_, tag)
 	return table.clone(tagged[tag] or {})
 end
 function CollectionService.GetInstanceAddedSignal(_, tag)
-	tagAdded[tag] = tagAdded[tag] or Signal.new()
-	return tagAdded[tag]
+	tag_added[tag] = tag_added[tag] or Signal.new()
+	return tag_added[tag]
 end
 function CollectionService.GetInstanceRemovedSignal(_, tag)
-	tagRemoved[tag] = tagRemoved[tag] or Signal.new()
-	return tagRemoved[tag]
+	tag_removed[tag] = tag_removed[tag] or Signal.new()
+	return tag_removed[tag]
 end
 
 local services = {
@@ -257,7 +257,7 @@ end
 
 -- helpers for the tests
 
-local function addPlayer(name: string)
+local function add_player(name: string)
 	local player = new("Player", name)
 	player.CharacterAdded = Signal.new()
 	player.CharacterRemoving = Signal.new()
@@ -267,12 +267,12 @@ local function addPlayer(name: string)
 	return player
 end
 
-local function removePlayer(player)
+local function remove_player(player)
 	Players.PlayerRemoving:Fire(player)
 	player.Parent = nil
 end
 
-local function spawnCharacter(player)
+local function spawn_character(player)
 	local old = player.Character
 	if old then
 		player.CharacterRemoving:Fire(old)
@@ -294,13 +294,13 @@ local function spawnCharacter(player)
 	return character
 end
 
-local function addTag(instance, tag: string)
+local function add_tag(instance, tag: string)
 	tagged[tag] = tagged[tag] or {}
 	table.insert(tagged[tag], instance)
 	CollectionService:GetInstanceAddedSignal(tag):Fire(instance)
 end
 
-local function removeTag(instance, tag: string)
+local function remove_tag(instance, tag: string)
 	table.remove(tagged[tag], table.find(tagged[tag], instance))
 	CollectionService:GetInstanceRemovedSignal(tag):Fire(instance)
 end
@@ -311,8 +311,8 @@ end
 local Heartbeat = Signal.new()
 services.RunService = { Heartbeat = Heartbeat }
 
-local function step(deltaTime: number)
-	Heartbeat:Fire(deltaTime)
+local function step(delta_time: number)
+	Heartbeat:Fire(delta_time)
 end
 
 -- Vector3 is the native vector, and CFrame only supports translations
@@ -376,9 +376,9 @@ return {
 	new = new,
 	workspace = workspace,
 	Players = Players,
-	addPlayer = addPlayer,
-	removePlayer = removePlayer,
-	spawnCharacter = spawnCharacter,
-	addTag = addTag,
-	removeTag = removeTag,
+	add_player = add_player,
+	remove_player = remove_player,
+	spawn_character = spawn_character,
+	add_tag = add_tag,
+	remove_tag = remove_tag,
 }
