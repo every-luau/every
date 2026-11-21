@@ -10,7 +10,7 @@ It is what [Signal](https://every-luau.github.io/docs/signal) and [Observable](h
 
 ```toml
 [dependencies]
-Connection = { name = "every/connection", version = "^0.1.0" }
+Connection = { name = "every/connection", version = "^0.0.1" }
 ```
 
 ```sh

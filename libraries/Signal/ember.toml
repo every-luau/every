@@ -1,6 +1,6 @@
 [package]
 name = "every/signal"
-version = "0.1.0"
+version = "0.0.1"
 description = "A yield-safe signal whose handlers run on a recycled thread."
 authors = []
 repository = "every-luau/every"
@@ -12,9 +12,9 @@ main = "src/init.luau"
 includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
 [dependencies]
-Thread = { name = "every/thread", version = "^0.1.0" }
-Connection = { name = "every/connection", version = "^0.1.0" }
-# Signal = { name = "every/signal", version = "^0.1.0" }
+Thread = { name = "every/thread", version = "^0.0.1" }
+Connection = { name = "every/connection", version = "^0.0.1" }
+# Signal = { name = "every/signal", version = "^0.0.1" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"

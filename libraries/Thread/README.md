@@ -10,7 +10,7 @@ Runs callbacks on a recycled thread instead of creating a new one per call.
 
 ```toml
 [dependencies]
-Thread = { name = "every/thread", version = "^0.1.0" }
+Thread = { name = "every/thread", version = "^0.0.1" }
 ```
 
 ```sh

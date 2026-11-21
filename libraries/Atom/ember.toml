@@ -1,6 +1,6 @@
 [package]
 name = "every/atom"
-version = "0.1.0"
+version = "0.0.1"
 description = "A value that can be observed, derived and updated."
 authors = []
 repository = "every-luau/every"
@@ -12,10 +12,10 @@ main = "src/init.luau"
 includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
 [dependencies]
-Signal = { name = "every/signal", version = "^0.1.0" }
-Thread = { name = "every/thread", version = "^0.1.0" }
-Void = { name = "every/void", version = "^0.1.0" }
-# Signal = { name = "every/signal", version = "^0.1.0" }
+Signal = { name = "every/signal", version = "^0.0.1" }
+Thread = { name = "every/thread", version = "^0.0.1" }
+Void = { name = "every/void", version = "^0.0.1" }
+# Signal = { name = "every/signal", version = "^0.0.1" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"

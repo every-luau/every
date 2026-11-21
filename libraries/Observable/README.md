@@ -10,7 +10,7 @@ Observables are cold: nothing runs until something subscribes, and each subscrip
 
 ```toml
 [dependencies]
-Observable = { name = "every/observable", version = "^0.1.0" }
+Observable = { name = "every/observable", version = "^0.0.1" }
 ```
 
 ```sh

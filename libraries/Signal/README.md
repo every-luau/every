@@ -10,7 +10,7 @@ Handlers are stored in a linked list, so connecting and disconnecting never walk
 
 ```toml
 [dependencies]
-Signal = { name = "every/signal", version = "^0.1.0" }
+Signal = { name = "every/signal", version = "^0.0.1" }
 ```
 
 ```sh

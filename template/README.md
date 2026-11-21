@@ -8,7 +8,7 @@
 
 ```toml
 [dependencies]
-Template = { name = "every/template", version = "^0.1.0" }
+Template = { name = "every/template", version = "^0.0.1" }
 ```
 
 ```sh

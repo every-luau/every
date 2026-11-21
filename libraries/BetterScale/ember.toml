@@ -1,6 +1,6 @@
 [package]
 name = "every/better-scale"
-version = "0.1.0"
+version = "0.0.1"
 description = "Scales a UIScale with the size of its gui, configured with attributes."
 authors = []
 repository = "every-luau/every"
@@ -12,8 +12,8 @@ main = "src/init.luau"
 includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
 [dependencies]
-Void = { name = "every/void", version = "^0.1.0" }
-# Signal = { name = "every/signal", version = "^0.1.0" }
+Void = { name = "every/void", version = "^0.0.1" }
+# Signal = { name = "every/signal", version = "^0.0.1" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"

@@ -10,7 +10,7 @@ Every item is cleaned the way its type expects: instances are destroyed, connect
 
 ```toml
 [dependencies]
-Void = { name = "every/void", version = "^0.1.0" }
+Void = { name = "every/void", version = "^0.0.1" }
 ```
 
 ```sh

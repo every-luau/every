@@ -1,6 +1,6 @@
 [package]
 name = "every/weight"
-version = "0.1.0"
+version = "0.0.1"
 description = "Picks random keys from a table of weights, with an optional luck factor."
 authors = []
 repository = "every-luau/every"
@@ -16,7 +16,7 @@ wally = "https://github.com/UpliftGames/wally-index"
 
 [dependencies]
 Cryptography = { name = "daily3014/cryptography", version = "^3.1.4", index = "wally" }
-# Signal = { name = "every/signal", version = "^0.1.0" }
+# Signal = { name = "every/signal", version = "^0.0.1" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"
