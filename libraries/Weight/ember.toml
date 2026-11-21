@@ -1,7 +1,7 @@
 [package]
 name = "every/weight"
 version = "0.0.1"
-description = "Picks random keys from a table of weights, with an optional luck factor."
+description = "Weight picks random keys from a table of weights, with an optional luck factor."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

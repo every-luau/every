@@ -221,13 +221,31 @@ end
 
 -- Every library sits next to the others, the same way package managers install
 -- dependencies, so luau-lsp resolves requires like `script.Parent.Thread`.
+-- Packages installed in a library's `Packages` folder, like Weight's Cryptography,
+-- sit next to them too.
 function commands.sourcemap()
 	local children = {}
+	local names = {}
 	for _, dir in libraries() do
 		local name = string.match(dir, "[^/]+$") :: string
 		local node = moduleNode(name, `{dir}/src`)
 		if node then
 			table.insert(children, node)
+			names[name] = true
+		end
+	end
+
+	for _, dir in libraries() do
+		local packages = `{dir}/Packages`
+		if fs.isDir(packages) then
+			for _, entry in fs.readDir(packages) do
+				local name = string.match(entry, "^(.+)%.luau?$") or entry
+				local node = if names[name] then nil else moduleNode(name, `{packages}/{entry}`)
+				if node then
+					table.insert(children, node)
+					names[name] = true
+				end
+			end
 		end
 	end
 

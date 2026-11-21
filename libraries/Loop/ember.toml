@@ -1,7 +1,7 @@
 [package]
 name = "every/loop"
 version = "0.0.1"
-description = "Calls a callback every few seconds, driven by Heartbeat."
+description = "Loop calls a callback every few seconds, driven by Heartbeat."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

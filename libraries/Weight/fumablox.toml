@@ -1,6 +1,5 @@
 title = "Weight"
-description = "Picks random keys from a table of weights, with an optional luck factor."
-emoji = "⚖️"
+description = "Weight picks random keys from a table of weights, with an optional luck factor."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
