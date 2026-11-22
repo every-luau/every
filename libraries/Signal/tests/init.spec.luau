@@ -249,40 +249,6 @@ describe("Signal", function()
 		expect(#signal:get_connections()).toBe(0)
 	end)
 
-	it("fires through a BindableEvent shared with other listeners", function()
-		local source, fire, count = rbx_signal()
-		local fired: { any } = {}
-		local event = {
-			Event = source,
-			Fire = function(_, ...)
-				table.insert(fired, { ... })
-				fire(...)
-			end,
-		}
-
-		local first = Signal.bindable(event)
-		local second = Signal.bindable(event)
-		local heard: { string } = {}
-		first:connect(function(value)
-			table.insert(heard, `first {value}`)
-		end)
-		second:connect(function(value)
-			table.insert(heard, `second {value}`)
-		end)
-
-		first:fire("a")
-		fire("b")
-		-- the stand-in calls its listeners in any order
-		table.sort(heard)
-		expect(fired).toEqual({ { "a" } })
-		expect(heard).toEqual({ "first a", "first b", "second a", "second b" })
-
-		first:destroy()
-		expect(count()).toBe(1)
-		first:fire("c")
-		expect(#fired).toBe(1)
-	end)
-
 	it("tells signals apart", function()
 		expect(Signal.is(Signal.new())).toBe(true)
 		expect(Signal.is({})).toBe(false)

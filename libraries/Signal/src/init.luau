@@ -48,7 +48,6 @@ export type Signal<T...> = setmetatable<{
 	_tail: Node | false,
 	_count: number,
 	_proxy: RBXScriptConnection | false,
-	_event: BindableEvent | false,
 	connect: (self: Signal<T...>, callback: (T...) -> ()) -> Connection,
 	once: (self: Signal<T...>, callback: (T...) -> ()) -> Connection,
 	get_connections: (self: Signal<T...>) -> { Connection },
@@ -76,20 +75,6 @@ const function unlink(signal: Signal<...any>, node: Node)
 	end
 end
 
--- calls the handlers connected before this fire started
-const function fire_handlers(signal: Signal<...any>, ...: any)
-	const last = signal._count
-
-	local node = signal._head
-	while node and node._id <= last do
-		if node._connection.connected then
-			Thread(node._callback, ...)
-		end
-
-		node = node._next
-	end
-end
-
 const Signal = {}
 Signal.__index = Signal
 
@@ -107,7 +92,6 @@ function Signal.new<T...>(): Signal<T...>
 			_tail = false,
 			_count = 0,
 			_proxy = false,
-			_event = false,
 		},
 		Signal
 	) :: any
@@ -129,44 +113,6 @@ function Signal.wrap<T...>(rbx_signal: RBXScriptSignal): Signal<T...>
 	const signal = Signal.new()
 	signal._proxy = rbx_signal:Connect(function(...)
 		signal:fire(...)
-	end)
-
-	return signal :: any
-end
-
---[=[
-	@within Signal
-	@function bindable
-	@param event BindableEvent
-	@return Signal<T...>
-
-	creates a Signal that fires through `event`. firing it fires `event`, and
-	its handlers run whenever `event` fires, so scripts that don't share the
-	Signal, like ones connected to `event.Event` or another Signal made from the
-	same `event`, all hear the same fires
-
-	```lua
-	local event = ReplicatedStorage:WaitForChild("RoundEnded")
-	local round_ended = Signal.bindable(event)
-
-	round_ended:connect(function(winner)
-		print(`{winner} won`)
-	end)
-	round_ended:fire("Alice")
-	```
-
-	:::info
-	the fired values follow the rules of `BindableEvent`: tables are copied
-	without their metatable, and with deferred signal behavior the handlers run
-	at the next resumption point instead of right away. destroying the Signal
-	disconnects it from `event` but leaves `event` alone
-	:::
-]=]
-function Signal.bindable<T...>(event: BindableEvent): Signal<T...>
-	const signal = Signal.new()
-	signal._event = event
-	signal._proxy = event.Event:Connect(function(...)
-		fire_handlers(signal, ...)
 	end)
 
 	return signal :: any
@@ -263,18 +209,19 @@ end
 	@method fire
 	@param ... T...
 
-	calls every connected handler with `...`, each on its own recycled thread.
-	a Signal made with [Signal.bindable] fires its `BindableEvent` instead,
-	which then calls the handlers
+	calls every connected handler with `...`, each on its own recycled thread
 ]=]
 function Signal.fire<T...>(self: Signal<T...>, ...: T...)
-	const event = self._event
-	if event then
-		event:Fire(...)
-		return
-	end
+	const last = self._count
 
-	fire_handlers(self, ...)
+	local node = self._head
+	while node and node._id <= last do
+		if node._connection.connected then
+			Thread(node._callback, ...)
+		end
+
+		node = node._next
+	end
 end
 
 --[=[
@@ -327,8 +274,8 @@ end
 	@within Signal
 	@method destroy
 
-	disconnects every handler, and stops following the RBXScriptSignal or the
-	BindableEvent if the signal was made with [Signal.wrap] or [Signal.bindable]
+	disconnects every handler, and stops following the RBXScriptSignal if the
+	signal was made with [Signal.wrap]
 ]=]
 function Signal.destroy<T...>(self: Signal<T...>)
 	self:disconnect_all()
@@ -338,12 +285,10 @@ function Signal.destroy<T...>(self: Signal<T...>)
 		proxy:Disconnect()
 		self._proxy = false
 	end
-	self._event = false
 end
 
 return table.freeze({
 	new = Signal.new,
 	wrap = Signal.wrap,
-	bindable = Signal.bindable,
 	is = Signal.is,
 })
