@@ -53,6 +53,8 @@ jobs:
           chmod +x "$RUNNER_TEMP/embr/embr"
           sed -i '/= { name = "every\//d' ember.toml
           "$RUNNER_TEMP/embr/embr" install
+          # embr installs Roblox packages in roblox, the tests read them from Packages
+          if [ -d roblox ] && [ ! -e Packages ]; then mv roblox Packages; fi
 
       - run: lest
 
