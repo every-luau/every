@@ -40,6 +40,20 @@ jobs:
           chmod +x "$RUNNER_TEMP/lest/lest"
           echo "$RUNNER_TEMP/lest" >> "$GITHUB_PATH"
 
+      # Packages from other indices, like Region's Bolt, are installed in Packages by
+      # embr. The every/* libraries are left out: the tests find them next to this one
+      - name: Install packages from other indices
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          grep -q 'index = "' ember.toml || exit 0
+          curl -fsSL "https://github.com/ember-luau/ember/releases/download/v0.6.0/embr-linux-x86_64.zip" -o "$RUNNER_TEMP/embr.zip"
+          unzip -q "$RUNNER_TEMP/embr.zip" -d "$RUNNER_TEMP/embr"
+          chmod +x "$RUNNER_TEMP/embr/embr"
+          sed -i '/= { name = "every\//d' ember.toml
+          "$RUNNER_TEMP/embr/embr" install
+
       - run: lest
 
   docs:
