@@ -1,7 +1,7 @@
 [package]
 name = "every/region"
 version = "0.0.1"
-description = "Region is a box that reports what enters and leaves it, every frame, without physics queries."
+description = "Region is a shape that reports what enters and leaves it, every frame, without physics queries."
 authors = []
 repository = "every-luau/every"
 license = "MIT"
@@ -11,15 +11,17 @@ environment = "shared"
 main = "src/init.luau"
 includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
+[indices]
+wally = "https://github.com/UpliftGames/wally-index"
+
 [dependencies]
+Bolt = { name = "unityjaeger/bolt", version = "^1.0.2", index = "wally" }
 Connection = { name = "every/connection", version = "^0.0.1" }
 Loop = { name = "every/loop", version = "^0.0.1" }
 Observe = { name = "every/observe", version = "^0.0.1" }
 Signal = { name = "every/signal", version = "^0.0.1" }
 Thread = { name = "every/thread", version = "^0.0.1" }
 Void = { name = "every/void", version = "^0.0.1" }
-Volume = { name = "every/volume", version = "^0.0.1" }
-# Signal = { name = "every/signal", version = "^0.0.1" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"

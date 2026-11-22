@@ -128,6 +128,20 @@ describe("Observe", function()
 		expect(characters).toEqual({ "+Bob", "-Bob", "+Bob", "-Bob" })
 	end)
 
+	it("observes the character of one player", function()
+		local player = roblox.add_player("Dana")
+		roblox.spawn_character(player)
+
+		local events, connection = journal(function(callback)
+			return Observe.character(player, callback)
+		end)
+
+		roblox.spawn_character(player)
+		connection:disconnect()
+		roblox.spawn_character(player)
+		expect(events).toEqual({ "+Dana", "-Dana", "+Dana", "-Dana" })
+	end)
+
 	it("passes the player to the characters predicate", function()
 		local seen: { string } = {}
 		Observe.characters(function(player)
@@ -173,6 +187,89 @@ describe("Observe", function()
 		expect(events).toEqual({ "+Old", "-Old", "+New" })
 	end)
 
+	it("observes instances by name anywhere in the game", function()
+		local folder = roblox.new("Folder", "Folder", roblox.workspace)
+		roblox.new("Part", "Gate", folder)
+
+		local events = journal(function(callback)
+			return Observe.instance("Gate", callback)
+		end)
+
+		roblox.new("Part", "Wall", folder)
+		local second = roblox.new("Part", "Gate", roblox.workspace)
+		folder.Parent = nil
+		second.Parent = nil
+		expect(events).toEqual({ "+Gate", "+Gate", "-Gate", "-Gate" })
+	end)
+
+	it("only observes instances in the root it is given", function()
+		local inside = roblox.new("Folder", "Inside", roblox.workspace)
+		local outside = roblox.new("Folder", "Outside", roblox.workspace)
+
+		local named = journal(function(callback)
+			return Observe.instance("Lamp", callback, nil, inside)
+		end)
+		local classed = journal(function(callback)
+			return Observe.class_name("Seat", callback, nil, inside)
+		end)
+
+		roblox.new("Part", "Lamp", outside)
+		roblox.new("Seat", "Chair", outside)
+		roblox.new("Part", "Lamp", inside)
+		roblox.new("Seat", "Chair", inside)
+		expect(named).toEqual({ "+Lamp" })
+		expect(classed).toEqual({ "+Chair" })
+
+		inside.Parent = nil
+		outside.Parent = nil
+	end)
+
+	it("observes the players of a team until they change team", function()
+		local red = roblox.new("Team", "Red")
+		local blue = roblox.new("Team", "Blue")
+		local player = roblox.add_player("Eve")
+		player.Team = red
+
+		local events = journal(function(callback)
+			return Observe.team(red, callback)
+		end)
+
+		player.Team = blue
+		player.Team = red
+		roblox.remove_player(player)
+		expect(events).toEqual({ "+Eve", "-Eve", "+Eve", "-Eve" })
+	end)
+
+	it("observes instances by class anywhere in the game", function()
+		local events = journal(function(callback)
+			return Observe.class_name("Seat", callback)
+		end)
+
+		local seat = roblox.new("Seat", "Bench", roblox.workspace)
+		roblox.new("Part", "Floor", roblox.workspace)
+		seat.Parent = nil
+		expect(events).toEqual({ "+Bench", "-Bench" })
+	end)
+
+	it("observes the preferred input and the display size", function()
+		local UserInputService = game:GetService("UserInputService")
+		local GuiService = game:GetService("GuiService")
+		UserInputService.PreferredInput = "Touch"
+		GuiService.ViewportDisplaySize = "Small"
+
+		local inputs = journal(function(callback)
+			return Observe.preferred_input(callback)
+		end)
+		local sizes = journal(function(callback)
+			return Observe.display_size(callback)
+		end)
+
+		UserInputService.PreferredInput = "Gamepad"
+		GuiService.ViewportDisplaySize = "Large"
+		expect(inputs).toEqual({ "+Touch", "-Touch", "+Gamepad" })
+		expect(sizes).toEqual({ "+Small", "-Small", "+Large" })
+	end)
+
 	it("exposes every observer as its own module", function()
 		for name, observer in Observe do
 			expect(modules[name]).toBe(observer)
@@ -182,7 +279,10 @@ describe("Observe", function()
 	it("errors for the local player on the server", function()
 		expect(function()
 			Observe.local_character(print)
-		end).toThrow("only exists on the client")
+		end).toThrow("Observe.local_character only exists on the client")
+		expect(function()
+			Observe.local_tools(print)
+		end).toThrow("Observe.local_tools only exists on the client")
 	end)
 end)
 

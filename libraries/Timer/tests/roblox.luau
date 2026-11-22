@@ -52,14 +52,19 @@ end
 
 local heartbeat_listeners: { [(delta_time: number) -> ()]: true } = {}
 
+-- the connections Connect returns, so `typeof` can call them RBXScriptConnections
+local rbx_connections: { [any]: true } = setmetatable({}, { __mode = "k" }) :: any
+
 local Heartbeat = {
 	Connect = function(_, listener: (delta_time: number) -> ())
 		heartbeat_listeners[listener] = true
-		return {
-			Disconnect = function()
+		local connection = {
+			Disconnect = function(_)
 				heartbeat_listeners[listener] = nil
 			end,
 		}
+		rbx_connections[connection] = true
+		return connection
 	end,
 }
 
@@ -85,6 +90,10 @@ local services = {
 local warnings: { string } = {}
 
 local globals = _G :: any
+local builtin_typeof = typeof
+globals.typeof = function(value: any): string
+	return if rbx_connections[value] then "RBXScriptConnection" else builtin_typeof(value)
+end
 globals.task = { spawn = spawn, defer = queue, delay = delay, cancel = cancel }
 globals.warn = function(...: any)
 	local parts = {}

@@ -41,6 +41,11 @@ connection:disconnect()
 local added = Signal.wrap(workspace.ChildAdded)
 added:connect(print)
 added:destroy()
+
+-- Fire through a BindableEvent, heard by every script that uses it
+local round_ended = Signal.bindable(ReplicatedStorage.RoundEnded)
+round_ended:connect(print)
+round_ended:fire("Alice")
 ```
 
 ## License

@@ -219,6 +219,18 @@ describe("Future", function()
 		end).toThrow("not ready")
 	end)
 
+	it("falls back with unwrap_or_else, getting the error", function()
+		expect(Future.resolve(1):unwrap_or_else(function()
+			return 0
+		end)).toBe(1)
+		expect(Future.reject("bad"):unwrap_or_else(function(err)
+			return `fell back from {err}`
+		end)).toBe("fell back from bad")
+		expect(manual():unwrap_or_else(function(err)
+			return err == nil
+		end)).toBe(true)
+	end)
+
 	it("tells futures apart", function()
 		expect(Future.is(Future.resolve())).toBe(true)
 		expect(Future.is({ await = print })).toBe(false)

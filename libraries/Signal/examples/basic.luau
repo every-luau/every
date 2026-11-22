@@ -34,3 +34,16 @@ print(name, damage) --> Player2 10
 local added = Signal.wrap(workspace.ChildAdded)
 added:connect(print)
 added:destroy()
+
+-- A signal can also fire through a BindableEvent, so other scripts connected to
+-- it, or to their own Signal made from it, hear the same fires.
+local event = Instance.new("BindableEvent")
+local round_ended = Signal.bindable(event)
+round_ended:connect(function(winner: string)
+	print(`{winner} won`)
+end)
+event.Event:Connect(function(winner: string)
+	print(`another script heard that {winner} won`)
+end)
+round_ended:fire("Alice")
+round_ended:destroy()
