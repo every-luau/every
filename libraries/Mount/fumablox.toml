@@ -1,0 +1,10 @@
+title = "Mount"
+description = "Mount builds instances out of props, where any property can be a stream."
+gitRepoUrl = "https://github.com/every-luau/every"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true

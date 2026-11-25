@@ -1,0 +1,10 @@
+title = "Caffeine"
+description = "Caffeine keeps unanchored parts from falling asleep in Roblox physics."
+gitRepoUrl = "https://github.com/every-luau/every"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true

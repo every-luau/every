@@ -1,5 +1,5 @@
 title = "Observable"
-description = "Observable is a reactive stream of values to subscribe to, map, filter and dedupe."
+description = "Observable hands out a Brio for every value or item of a Stream, alive while it lasts."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

@@ -19,7 +19,7 @@
 	print(loot:generate()) --> common
 	print(loot:generate(5)) -- rare and epic come up more often
 	```
-    
+
 	:::info
 	luck above 1 makes rare keys more likely by flattening the weights, and the
 	intensity sets how much luck does. keys with a weight of 0 or less never come up

@@ -147,7 +147,7 @@ function Timer.start(self: Timer): Timer
 		self._time += elapsed * self._speed
 		self.updated:fire(self._time, elapsed)
 	end)
-	self._loop = self._void:add(loop :: any)
+	self._loop = self._void:add(loop)
 
 	return self
 end

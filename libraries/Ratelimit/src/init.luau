@@ -35,8 +35,7 @@
 ]=]
 export type Limiter<K> = (key: K?) -> boolean
 
--- the key calls without one count for
-const NO_KEY = newproxy()
+const NO_KEY = newproxy() -- the key calls without one count for
 
 --[=[
 	@within Ratelimit
@@ -63,9 +62,12 @@ const function new<K>(limit: number, interval: number): Limiter<K>
 		end
 
 		if count == 0 then
-			task.delay(interval, function()
-				counts[k] = nil
-			end)
+			task.delay(
+				interval,
+				function()
+					counts[k] = nil
+				end
+			)
 		end
 
 		counts[k] = count + 1
@@ -73,8 +75,13 @@ const function new<K>(limit: number, interval: number): Limiter<K>
 	end
 end
 
-return table.freeze(setmetatable({ new = new }, {
-	__call = function<K>(_, limit: number, interval: number): Limiter<K>
-		return new(limit, interval)
-	end,
-}))
+return table.freeze(
+	setmetatable(
+		{ new = new },
+		{
+			__call = function<K>(_, limit: number, interval: number): Limiter<K>
+				return new(limit, interval)
+			end,
+		}
+	)
+)

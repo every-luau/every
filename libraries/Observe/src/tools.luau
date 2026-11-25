@@ -1,102 +1,112 @@
-const Connection = require(script.Parent.Parent.Connection)
-const Thread = require(script.Parent.Parent.Thread)
+const Observable = require(script.Parent.Parent.Observable)
+const Stream = require(script.Parent.Parent.Stream)
 const Void = require(script.Parent.Parent.Void)
 
-const character = require("./character")
-const children = require("./children")
+type Void = Void.Void
 
 --[=[
 	@within Observe
 	@function tools
 	@param player Player
-	@param callback (tool: Tool, void: Void) -> ()
-	@param predicate ((tool: Tool) -> boolean)?
-	@return Connection
+	@return Observable<Tool>
 
-	calls `callback` for every tool `player` has, in their backpack or held by
-	their character, now and later, if `predicate` accepts it. moving a tool
-	between the backpack and the character keeps it, and its void is cleaned
-	once it goes anywhere else, like when it is dropped or the character
-	respawns
+	observes the tools `player` has, in their backpack or held by their
+	character: a brio for each one now and later. moving a tool between the
+	backpack and the character keeps its brio alive, and it dies once the tool
+	goes anywhere else, like when it is dropped or the character respawns
 
 	```lua
-	Observe.tools(player, function(tool, void)
+	Observe.tools(player):subscribe(function(brio)
+		local void, tool = brio:to_void_and_value()
 		void:add(tool.Activated:Connect(function()
 			print(`{player.Name} used {tool.Name}`)
 		end))
 	end)
 	```
 ]=]
-return function(
-	player: Player,
-	callback: (tool: Tool, void: Void.Void) -> (),
-	predicate: ((tool: Tool) -> boolean)?
-): Connection.Connection
-	const void = Void.new()
-	const voids: { [Instance]: Void.Void } = {}
-	-- the character tools can be held by, until it is removed
-	local current: Model? = nil
+return function(player: Player): Observable.Observable<Tool>
+	return Observable.new(Stream.life(function(emit: (Tool, boolean) -> (), void: Void)
+		-- what follows each tool, cleaned when it stops being owned
+		const owned: { [Tool]: Void } = {}
+		-- the character tools can be held by, until it is removed
+		local current: Model? = nil
 
-	const function owns(parent: Instance?): boolean
-		if parent == nil then
-			return false
-		end
-		return parent == current or (parent:IsA("Backpack") and parent.Parent == player)
-	end
-
-	const function remove(tool: Instance)
-		const tool_void = voids[tool]
-		if tool_void then
-			voids[tool] = nil
-			void:clean_item(tool_void)
-		end
-	end
-
-	const function add(instance: Instance)
-		if voids[instance] or not instance:IsA("Tool") or (predicate and not predicate(instance :: Tool)) then
-			return
-		end
-
-		const tool_void = void:extend()
-		voids[instance] = tool_void
-
-		-- fires when the tool moves, and when one of its ancestors does, like
-		-- the backpack being replaced on respawn
-		tool_void:add(instance.AncestryChanged:Connect(function()
-			if not owns(instance.Parent) then
-				remove(instance)
+		const function owns(parent: Instance?): boolean
+			if parent == nil then
+				return false
 			end
-		end))
+			return parent == current or (parent:IsA("Backpack") and parent.Parent == player)
+		end
 
-		Thread(callback, instance :: Tool, tool_void)
-	end
-
-	const observed_character = character(player, function(model, character_void)
-		current = model
-		character_void:add(function()
-			if current == model then
-				current = nil
+		const function remove(tool: Tool)
+			const tool_void = owned[tool]
+			if tool_void then
+				owned[tool] = nil
+				tool_void:clean()
+				emit(tool, false)
 			end
-			for tool in table.clone(voids) do
-				if tool.Parent == model then
+		end
+
+		const function add(instance: Instance)
+			if not instance:IsA("Tool") or owned[instance :: Tool] then
+				return
+			end
+			const tool = instance :: Tool
+
+			const tool_void = Void.new()
+			owned[tool] = tool_void
+
+			-- fires when the tool moves, and when one of its ancestors does, like
+			-- the backpack being replaced on respawn
+			tool_void:add(tool.AncestryChanged:Connect(function()
+				if not owns(tool.Parent) then
 					remove(tool)
 				end
+			end))
+
+			emit(tool, true)
+		end
+
+		const function follow_children(parent: Instance): any
+			return Stream.children(parent):listen(function(child: Instance, alive: boolean)
+				if alive then
+					add(child)
+				end
+			end)
+		end
+
+		void:add(Stream.character(player):each(function(model: Model?, character_void: Void)
+			if model == nil then
+				return
+			end
+
+			current = model
+			character_void:add(function()
+				if current == model then
+					current = nil
+				end
+				for tool in table.clone(owned) do
+					if tool.Parent == model then
+						remove(tool)
+					end
+				end
+			end)
+			character_void:add(follow_children(model))
+		end))
+
+		void:add(Stream.children(player)
+			:filter(function(child: Instance): boolean
+				return child:IsA("Backpack")
+			end)
+			:each(function(backpack: Instance, backpack_void: Void)
+				backpack_void:add(follow_children(backpack))
+			end))
+
+		void:add(function()
+			for tool, tool_void in owned do
+				owned[tool] = nil
+				tool_void:clean()
 			end
 		end)
-
-		character_void:add(model.ChildAdded:Connect(add))
-		for _, child in model:GetChildren() do
-			add(child)
-		end
-	end)
-	void:add(observed_character :: any)
-
-	const observed_backpacks = children(player, function(backpack, backpack_void)
-		backpack_void:add(children(backpack, add) :: any)
-	end, function(child)
-		return child:IsA("Backpack")
-	end)
-	void:add(observed_backpacks :: any)
-
-	return Connection.new(void)
+	end))
 end

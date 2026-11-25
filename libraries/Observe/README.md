@@ -1,8 +1,8 @@
 # Observe
 
-Observe runs a callback for every player, character, instance, tag or value, now and later
+Observe hands out a Brio for every player, character, instance, tag or value, now and later
 
-each observer calls its callback for what already exists, then for what comes later, with a [Void](https://every-luau.github.io/docs/void) cleaned once that thing is gone. it returns a [Connection](https://every-luau.github.io/docs/connection) that stops observing
+each observer returns an [Observable](https://every-luau.github.io/docs/observable). subscribing to it gives a [Brio](https://every-luau.github.io/docs/brio) for what already exists, then for what comes later. `brio:get_value()` reads it, and `brio:to_void()` gives a [Void](https://every-luau.github.io/docs/void) cleaned once that thing is gone. subscribing returns a [Connection](https://every-luau.github.io/docs/connection) that stops observing
 
 **[Documentation](https://every-luau.github.io/docs/observe)**
 
@@ -17,42 +17,53 @@ Observe = { name = "every/observe", version = "^0.0.1" }
 embr install
 ```
 
-installs [Connection](https://every-luau.github.io/docs/connection), [Thread](https://every-luau.github.io/docs/thread) and [Void](https://every-luau.github.io/docs/void) with it
+installs [Observable](https://every-luau.github.io/docs/observable), [Stream](https://every-luau.github.io/docs/stream) and [Void](https://every-luau.github.io/docs/void) with it
 
 ## Usage
 
 ```lua
 local Observe = require(ReplicatedStorage.Packages.Observe)
 
-Observe.tag("Lava", function(part, void)
+Observe.tag("Lava"):subscribe(function(brio)
+	local void, part = brio:to_void_and_value()
 	void:add(part.Touched:Connect(kill))
 end)
 
-Observe.characters(function(player, character, void)
+Observe.characters():subscribe(function(brio)
+	local void, character = brio:to_void_and_value()
 	local highlight = void:add(Instance.new("Highlight"))
 	highlight.Parent = character
 end)
 
 -- only looks in workspace instead of the whole game
-Observe.class_name("Seat", function(seat, void)
+Observe.class_name("Seat", workspace):subscribe(function(brio)
+	local void, seat = brio:to_void_and_value()
 	void:add(seat:GetPropertyChangedSignal("Occupant"):Connect(update_seat))
-end, nil, workspace)
+end)
 
-Observe.team(Teams.Red, function(player, void)
+Observe.team(Teams.Red):subscribe(function(brio)
+	local void, player = brio:to_void_and_value()
 	void:add(give_red_tools(player))
 end)
 
-Observe.preferred_input(function(input, void)
-	if input == Enum.PreferredInput.Touch then
+-- a brio only while the value passes the filter
+Observe.preferred_input()
+	:filter(function(input)
+		return input == Enum.PreferredInput.Touch
+	end)
+	:subscribe(function(brio)
+		local void = brio:to_void()
 		void:add(show_mobile_buttons())
-	end
-end)
+	end)
 
-local connection = Observe.attribute(workspace, "Night", function(night, void)
-	if night then
+local connection = Observe.attribute(workspace, "Night")
+	:filter(function(night)
+		return night == true
+	end)
+	:subscribe(function(brio)
+		local void = brio:to_void()
 		void:add(start_music())
-	end
-end)
+	end)
 
 connection:disconnect()
 ```

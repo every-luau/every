@@ -392,16 +392,19 @@ end
 
 -- tracks the parts in `root`
 const function track(self: Region, root: Instance)
-	const tracking = Observe.descendants(root, function(part, part_void)
-		self._parts[part :: BasePart] = true
-		part_void:add(function()
-			self._parts[part :: BasePart] = nil
-			self._shapes[part :: BasePart] = nil
+	const tracking = Observe.descendants(root)
+		:filter(function(descendant)
+			return descendant:IsA("BasePart")
 		end)
-	end, function(descendant)
-		return descendant:IsA("BasePart")
-	end)
-	self._tracking = self._void:add(tracking :: any)
+		:subscribe(function(brio)
+			const part_void, part = brio:to_void_and_value()
+			self._parts[part :: BasePart] = true
+			part_void:add(function()
+				self._parts[part :: BasePart] = nil
+				self._shapes[part :: BasePart] = nil
+			end)
+		end)
+	self._tracking = self._void:add(tracking)
 end
 
 -- checks every `interval` seconds while enabled
@@ -411,7 +414,7 @@ const function schedule(self: Region, interval: number)
 			check(self)
 		end
 	end)
-	self._loop = self._void:add(loop :: any)
+	self._loop = self._void:add(loop)
 end
 
 --[=[
@@ -727,7 +730,7 @@ function Region.observe(self: Region, callback: (value: any, void: Void.Void) ->
 		Thread(callback, value, value_void)
 	end
 
-	void:add(self.entered:connect(add) :: any)
+	void:add(self.entered:connect(add))
 	const left = self.left:connect(function(value)
 		const value_void = voids[value]
 		if value_void then
@@ -735,7 +738,7 @@ function Region.observe(self: Region, callback: (value: any, void: Void.Void) ->
 			void:clean_item(value_void)
 		end
 	end)
-	void:add(left :: any)
+	void:add(left)
 
 	for value in self._counts do
 		add(value)

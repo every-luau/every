@@ -1,51 +1,27 @@
-const Connection = require(script.Parent.Parent.Connection)
-const Thread = require(script.Parent.Parent.Thread)
-const Void = require(script.Parent.Parent.Void)
+const Observable = require(script.Parent.Parent.Observable)
+const Stream = require(script.Parent.Parent.Stream)
 
 --[=[
 	@within Observe
 	@function attribute
 	@param instance Instance
 	@param name string
-	@param callback (value: any, void: Void) -> ()
-	@param predicate ((value: any) -> boolean)?
-	@return Connection
+	@return Observable<any>
 
-	calls `callback` with the attribute `name` of `instance`, now and every time
-	it changes, if `predicate` accepts it. a missing attribute is nil. the void
-	of a value is cleaned when the attribute changes, even when `predicate`
-	rejects the new one
+	observes the attribute `name` of `instance`: a brio for its value now and
+	every time it changes, killed by the next one. a missing attribute is nil
 
 	```lua
-	Observe.attribute(player, "Team", function(team, void)
-		void:add(show_team_badge(team))
-	end, function(team)
-		return team ~= nil
-	end)
+	Observe.attribute(player, "Team")
+		:filter(function(team)
+			return team ~= nil
+		end)
+		:subscribe(function(brio)
+			local void, team = brio:to_void_and_value()
+			void:add(show_team_badge(team))
+		end)
 	```
 ]=]
-return function(
-	instance: Instance,
-	name: string,
-	callback: (value: any, void: Void.Void) -> (),
-	predicate: ((value: any) -> boolean)?
-): Connection.Connection
-	const void = Void.new()
-	const value_void = void:extend()
-
-	const function changed()
-		value_void:clean()
-
-		const value = instance:GetAttribute(name)
-		if predicate and not predicate(value) then
-			return
-		end
-
-		Thread(callback, value, value_void)
-	end
-
-	void:add(instance:GetAttributeChangedSignal(name):Connect(changed))
-	changed()
-
-	return Connection.new(void)
+return function(instance: Instance, name: string): Observable.Observable<any>
+	return Observable.new(Stream.attribute(instance, name))
 end

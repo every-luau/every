@@ -70,7 +70,8 @@ export type Atom<T> = setmetatable<{
 -- a copy of `value` with every table inside copied too, metatables kept
 const function deep_copy<T>(value: T): T
 	if type(value) ~= "table" then
-		return value
+		-- the check narrows `value` to `T & ~table`, which is still a T
+		return value :: any
 	end
 
 	const copy = {}
@@ -282,7 +283,7 @@ end
 	flips a boolean value
 ]=]
 function Atom.toggle<T>(self: Atom<T>): Atom<T>
-	return self:update(function(value: any)
+	return self:update(function(value: any): any
 		return not value
 	end)
 end
@@ -389,7 +390,7 @@ const function derive(self: Atom<any>, value: any, follow: (derived: Atom<any>, 
 	const following = self._changed:connect(function(new)
 		follow(derived, new)
 	end)
-	derived._void:add(following :: any)
+	derived._void:add(following)
 	return derived
 end
 

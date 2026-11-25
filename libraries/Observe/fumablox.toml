@@ -1,5 +1,5 @@
 title = "Observe"
-description = "Observe runs a callback for every player, character, instance, tag or value, now and later."
+description = "Observe hands out a Brio for every player, character, instance, tag or value, now and later."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

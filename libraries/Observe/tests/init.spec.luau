@@ -12,14 +12,13 @@ for name in Observe do
 	modules[name] = require(`../src/{name}`)
 end
 
--- observes with `observe`, recording "+name" when the callback runs and "-name"
--- when its void is cleaned
-local function journal(observe: (callback: (...any) -> ()) -> any): ({ string }, any)
+-- subscribes to `observable`, recording "+name" when a brio comes and "-name"
+-- when it dies
+local function journal(observable: any): ({ string }, any)
 	local events: { string } = {}
-	local connection = observe(function(...)
-		local args = { ... }
-		local void = args[#args]
-		local name = tostring(args[#args - 1])
+	local connection = observable:subscribe(function(brio)
+		local void, value = brio:to_void_and_value()
+		local name = tostring(value)
 		table.insert(events, `+{name}`)
 		void:add(function()
 			table.insert(events, `-{name}`)
@@ -33,9 +32,7 @@ describe("Observe", function()
 		local folder = roblox.new("Folder", "Folder")
 		roblox.new("Part", "A", folder)
 
-		local events, connection = journal(function(callback)
-			return Observe.children(folder, callback)
-		end)
+		local events, connection = journal(Observe.children(folder))
 
 		local b = roblox.new("Part", "B", folder)
 		b.Parent = nil
@@ -52,11 +49,9 @@ describe("Observe", function()
 		roblox.new("Part", "Keep", folder)
 		roblox.new("Folder", "Skip", folder)
 
-		local events = journal(function(callback)
-			return Observe.children(folder, callback, function(child)
-				return child:IsA("BasePart")
-			end)
-		end)
+		local events = journal(Observe.children(folder):filter(function(child)
+			return child:IsA("BasePart")
+		end))
 
 		expect(events).toEqual({ "+Keep" })
 	end)
@@ -64,9 +59,7 @@ describe("Observe", function()
 	it("observes descendants", function()
 		local root = roblox.new("Folder", "Root")
 		local inner = roblox.new("Folder", "Inner", root)
-		local events = journal(function(callback)
-			return Observe.descendants(root, callback)
-		end)
+		local events = journal(Observe.descendants(root))
 
 		roblox.new("Part", "Deep", inner)
 		inner.Parent = nil
@@ -77,9 +70,7 @@ describe("Observe", function()
 		local part = roblox.new("Part", "Part")
 		part.Color = "red"
 
-		local events = journal(function(callback)
-			return Observe.property(part, "Color", callback)
-		end)
+		local events = journal(Observe.property(part, "Color"))
 
 		part.Color = "blue"
 		expect(events).toEqual({ "+red", "-red", "+blue" })
@@ -89,11 +80,9 @@ describe("Observe", function()
 		local part = roblox.new("Part", "Part")
 		part:SetAttribute("Level", 1)
 
-		local events = journal(function(callback)
-			return Observe.attribute(part, "Level", callback, function(value)
-				return value ~= nil
-			end)
-		end)
+		local events = journal(Observe.attribute(part, "Level"):filter(function(value)
+			return value ~= nil
+		end))
 
 		part:SetAttribute("Level", nil)
 		part:SetAttribute("Level", 2)
@@ -102,9 +91,7 @@ describe("Observe", function()
 
 	it("observes tags", function()
 		local part = roblox.new("Part", "Lava")
-		local events = journal(function(callback)
-			return Observe.tag("Lava", callback)
-		end)
+		local events = journal(Observe.tag("Lava"))
 
 		roblox.add_tag(part, "Lava")
 		roblox.remove_tag(part, "Lava")
@@ -112,12 +99,8 @@ describe("Observe", function()
 	end)
 
 	it("observes players and characters", function()
-		local players = journal(function(callback)
-			return Observe.players(callback)
-		end)
-		local characters = journal(function(callback)
-			return Observe.characters(callback)
-		end)
+		local players = journal(Observe.players())
+		local characters = journal(Observe.characters())
 
 		local player = roblox.add_player("Bob")
 		roblox.spawn_character(player)
@@ -132,9 +115,7 @@ describe("Observe", function()
 		local player = roblox.add_player("Dana")
 		roblox.spawn_character(player)
 
-		local events, connection = journal(function(callback)
-			return Observe.character(player, callback)
-		end)
+		local events, connection = journal(Observe.character(player))
 
 		roblox.spawn_character(player)
 		connection:disconnect()
@@ -142,13 +123,15 @@ describe("Observe", function()
 		expect(events).toEqual({ "+Dana", "-Dana", "+Dana", "-Dana" })
 	end)
 
-	it("passes the player to the characters predicate", function()
+	it("filters characters", function()
 		local seen: { string } = {}
-		Observe.characters(function(player)
-			table.insert(seen, player.Name)
-		end, function(player)
-			return player.Name == "Kept"
-		end)
+		Observe.characters()
+			:filter(function(character)
+				return character.Name == "Kept"
+			end)
+			:subscribe(function(brio)
+				table.insert(seen, brio:get_value().Name)
+			end)
 
 		roblox.spawn_character(roblox.add_player("Kept"))
 		roblox.spawn_character(roblox.add_player("Skipped"))
@@ -159,9 +142,7 @@ describe("Observe", function()
 		local player = roblox.add_player("Alice")
 		local character = roblox.spawn_character(player)
 
-		local events = journal(function(callback)
-			return Observe.tools(player, callback)
-		end)
+		local events = journal(Observe.tools(player))
 
 		local sword = roblox.new("Tool", "Sword", player:FindFirstChildOfClass("Backpack"))
 		sword.Parent = character
@@ -176,9 +157,7 @@ describe("Observe", function()
 		local player = roblox.add_player("Carl")
 		roblox.spawn_character(player)
 
-		local events = journal(function(callback)
-			return Observe.tools(player, callback)
-		end)
+		local events = journal(Observe.tools(player))
 
 		roblox.new("Tool", "Old", player:FindFirstChildOfClass("Backpack"))
 		roblox.spawn_character(player)
@@ -191,9 +170,7 @@ describe("Observe", function()
 		local folder = roblox.new("Folder", "Folder", roblox.workspace)
 		roblox.new("Part", "Gate", folder)
 
-		local events = journal(function(callback)
-			return Observe.instance("Gate", callback)
-		end)
+		local events = journal(Observe.instance("Gate"))
 
 		roblox.new("Part", "Wall", folder)
 		local second = roblox.new("Part", "Gate", roblox.workspace)
@@ -206,12 +183,8 @@ describe("Observe", function()
 		local inside = roblox.new("Folder", "Inside", roblox.workspace)
 		local outside = roblox.new("Folder", "Outside", roblox.workspace)
 
-		local named = journal(function(callback)
-			return Observe.instance("Lamp", callback, nil, inside)
-		end)
-		local classed = journal(function(callback)
-			return Observe.class_name("Seat", callback, nil, inside)
-		end)
+		local named = journal(Observe.instance("Lamp", inside))
+		local classed = journal(Observe.class_name("Seat", inside))
 
 		roblox.new("Part", "Lamp", outside)
 		roblox.new("Seat", "Chair", outside)
@@ -230,9 +203,7 @@ describe("Observe", function()
 		local player = roblox.add_player("Eve")
 		player.Team = red
 
-		local events = journal(function(callback)
-			return Observe.team(red, callback)
-		end)
+		local events = journal(Observe.team(red))
 
 		player.Team = blue
 		player.Team = red
@@ -241,9 +212,7 @@ describe("Observe", function()
 	end)
 
 	it("observes instances by class anywhere in the game", function()
-		local events = journal(function(callback)
-			return Observe.class_name("Seat", callback)
-		end)
+		local events = journal(Observe.class_name("Seat"))
 
 		local seat = roblox.new("Seat", "Bench", roblox.workspace)
 		roblox.new("Part", "Floor", roblox.workspace)
@@ -257,12 +226,8 @@ describe("Observe", function()
 		UserInputService.PreferredInput = "Touch"
 		GuiService.ViewportDisplaySize = "Small"
 
-		local inputs = journal(function(callback)
-			return Observe.preferred_input(callback)
-		end)
-		local sizes = journal(function(callback)
-			return Observe.display_size(callback)
-		end)
+		local inputs = journal(Observe.preferred_input())
+		local sizes = journal(Observe.display_size())
 
 		UserInputService.PreferredInput = "Gamepad"
 		GuiService.ViewportDisplaySize = "Large"
@@ -278,10 +243,10 @@ describe("Observe", function()
 
 	it("errors for the local player on the server", function()
 		expect(function()
-			Observe.local_character(print)
+			Observe.local_character()
 		end).toThrow("Observe.local_character only exists on the client")
 		expect(function()
-			Observe.local_tools(print)
+			Observe.local_tools()
 		end).toThrow("Observe.local_tools only exists on the client")
 	end)
 end)

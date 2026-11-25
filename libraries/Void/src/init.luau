@@ -42,8 +42,8 @@ const Thread = require(script.Parent.Thread)
 export type Item = Instance | { Destroy: () -> () } | { destroy: () -> () } | { disconnect: () -> () } | RBXScriptConnection | ((...any) -> ...any) | { [any]: any } | thread | Void | () -> ()
 
 export type Void = setmetatable<{ [Item]: (value: unknown) -> () } & {
-	add: <T>(self: Void, item: T & Item) -> T,
-	remove: <T>(self: Void, item: T & Item) -> T,
+	add: <T>(self: Void, item: T) -> T,
+	remove: <T>(self: Void, item: T) -> T,
 	remove_all: (self: Void) -> (),
 	attach_to_instance: (self: Void, instance: Instance) -> RBXScriptConnection,
 --
@@ -57,7 +57,7 @@ export type Void = setmetatable<{ [Item]: (value: unknown) -> () } & {
 	clean: (self: Void) -> (),
 	wrap_clean: (self: Void) -> () -> (),
 	destroy: (self: Void) -> (),
-	clean_item: <T>(self: Void, item: T & Item) -> T,
+	clean_item: <T>(self: Void, item: T) -> T,
 }, { __index: Void }>
 
 const finalizers = {
@@ -132,7 +132,7 @@ end
 	local part = void:add(Instance.new("Part"))
 	```
 ]=]
-function Void.add<T>(self: Void, item: T & Item): T
+function Void.add<T>(self: Void, item: T): T
 	local finalizer, type_name = get_finalizer(item)
 	assert(finalizer, `Cannot add item of type '{type_name}'.`)
 
@@ -148,7 +148,7 @@ end
 
 	stops tracking `item` without cleaning it, and returns it
 ]=]
-function Void.remove<T>(self: Void, item: T & Item): T
+function Void.remove<T>(self: Void, item: T): T
 	self[item] = nil
 	return item
 end
@@ -314,7 +314,7 @@ end
 	cleans `item` right away, stops tracking it and returns it. does nothing if
 	`item` isn't in the Void
 ]=]
-function Void.clean_item<T>(self: Void, item: T & Item): T
+function Void.clean_item<T>(self: Void, item: T): T
 	const finalizer = self[item]
 	if finalizer then
 		finalizer(item)

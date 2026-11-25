@@ -1,17 +1,19 @@
 --[=[
 	@class Observe
 
-	Observe runs a callback for every player, character, instance, tag or value, now and later
+	Observe hands out a [Brio] for every player, character, instance, tag or value, now and later
 
-	each observer calls its callback for what already exists, then for what comes
-	later. the callback's last argument is a [Void] cleaned once that thing is
-	gone, so whatever it sets up for it ends with it. every observer returns a
-	[Connection] that stops observing and cleans every void
+	each observer returns an [Observable]. subscribing to it gives a [Brio] for
+	what already exists, then for what comes later. [Brio:get_value] reads it,
+	and [Brio:to_void] gives a [Void] cleaned once that thing is gone, so
+	whatever was set up for it ends with it. subscribing returns a [Connection]
+	that stops observing and kills every brio
 
 	```lua
 	local Observe = require(path.to.Observe)
 
-	Observe.tag("Lava", function(part, void)
+	Observe.tag("Lava"):subscribe(function(brio)
+		local void, part = brio:to_void_and_value()
 		void:add(part.Touched:Connect(function(hit)
 			local humanoid = hit.Parent:FindFirstChildOfClass("Humanoid")
 			if humanoid then
@@ -26,7 +28,18 @@
 	observer is also its own module, so `require(path.to.Observe.tag)` only loads
 	that one
 	:::
+
+	:::tip
+	observables chain before subscribing: `filter` keeps what you need, and
+	`map` and `changed` work on observers of values like [Observe.property]
+	:::
 ]=]
+
+const Observable = require(script.Parent.Observable)
+
+export type Brio<T> = Observable.Brio<T>
+export type Connection = Observable.Connection
+export type Observable<T> = Observable.Observable<T>
 
 return table.freeze({
 	attribute = require("@self/attribute"),

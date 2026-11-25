@@ -1,7 +1,7 @@
 [package]
 name = "every/observable"
 version = "0.0.1"
-description = "Observable is a reactive stream of values to subscribe to, map, filter and dedupe."
+description = "Observable hands out a Brio for every value or item of a Stream, alive while it lasts."
 authors = []
 repository = "every-luau/every"
 license = "MIT"
@@ -12,8 +12,10 @@ main = "src/init.luau"
 includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
 [dependencies]
+Brio = { name = "every/brio", version = "^0.0.1" }
 Connection = { name = "every/connection", version = "^0.0.1" }
-Signal = { name = "every/signal", version = "^0.0.1" }
+Stream = { name = "every/stream", version = "^0.0.1" }
+Thread = { name = "every/thread", version = "^0.0.1" }
 Void = { name = "every/void", version = "^0.0.1" }
 
 [tools]

@@ -57,6 +57,7 @@ local hitbox = Region.new()
 hitbox.entered:connect(function(part)
 	print(`hit {part:GetFullName()}`)
 end)
+
 hitbox:destroy()
 
 shop:destroy()

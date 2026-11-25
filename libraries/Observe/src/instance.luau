@@ -1,5 +1,4 @@
-const Connection = require(script.Parent.Parent.Connection)
-const Void = require(script.Parent.Parent.Void)
+const Observable = require(script.Parent.Parent.Observable)
 
 const descendants = require("./descendants")
 
@@ -7,34 +6,27 @@ const descendants = require("./descendants")
 	@within Observe
 	@function instance
 	@param name string
-	@param callback (instance: Instance, void: Void) -> ()
-	@param predicate ((instance: Instance) -> boolean)?
 	@param root Instance?
-	@return Connection
+	@return Observable<Instance>
 
-	calls `callback` for every instance named `name` in `root`, now and later,
-	if `predicate` accepts it. the void is cleaned when the instance leaves
-	`root`. `root` defaults to the whole game, and a smaller one like
-	`workspace` listens to fewer instances
+	observes every instance named `name` in `root`: a brio for each one now
+	and later, killed when it leaves `root`. `root` defaults to the whole game,
+	and a smaller one like `workspace` listens to fewer instances
 
 	```lua
-	Observe.instance("SpawnDoor", function(door, void)
+	Observe.instance("SpawnDoor"):subscribe(function(brio)
+		local void, door = brio:to_void_and_value()
 		void:add(door.Touched:Connect(open))
 	end)
 	```
 
 	:::info
 	the name is read when the instance is added, so renaming it afterwards
-	doesn't add or clean it
+	doesn't give or kill a brio
 	:::
 ]=]
-return function(
-	name: string,
-	callback: (instance: Instance, void: Void.Void) -> (),
-	predicate: ((instance: Instance) -> boolean)?,
-	root: Instance?
-): Connection.Connection
-	return descendants(root or game, callback, function(instance)
-		return instance.Name == name and (predicate == nil or predicate(instance))
+return function(name: string, root: Instance?): Observable.Observable<Instance>
+	return descendants(root or game):filter(function(instance: Instance): boolean
+		return instance.Name == name
 	end)
 end

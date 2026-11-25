@@ -1,0 +1,10 @@
+title = "Cieluv"
+description = "Cieluv converts Color3 to and from CIELUV, and blends colors through it."
+gitRepoUrl = "https://github.com/every-luau/every"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true

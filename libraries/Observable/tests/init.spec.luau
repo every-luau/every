@@ -2,241 +2,172 @@
 local Lest = require("@lest")
 local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
-require("./roblox")
+local roblox = require("./roblox")
 local Observable = require("../src")
+local Stream = require("../../Stream/src")
 
--- an observable and a function emitting to every current subscription, with a
--- count of the subscriptions still running
-local function subject(): (any, (any) -> (), () -> number)
-	local emitters: { [(any) -> ()]: true } = {}
-	local observable = Observable.new(function(emit)
-		emitters[emit] = true
-		return function()
-			emitters[emit] = nil
-		end
+-- subscribes to `observable`, recording "+value" when a brio comes and
+-- "-value" when it dies
+local function journal(observable: any): ({ string }, any)
+	local events: { string } = {}
+	local connection = observable:subscribe(function(brio)
+		local void, value = brio:to_void_and_value()
+		local name = if typeof(value) == "Instance" then value.Name else tostring(value)
+		table.insert(events, `+{name}`)
+		void:add(function()
+			table.insert(events, `-{name}`)
+		end)
 	end)
-
-	local function emit(value: any)
-		for emitter in table.clone(emitters) do
-			emitter(value)
-		end
-	end
-
-	local function running(): number
-		local count = 0
-		for _ in emitters do
-			count += 1
-		end
-		return count
-	end
-
-	return observable, emit, running
-end
-
-local function collect(observable: any): ({ any }, any)
-	local values: { any } = {}
-	local connection = observable:subscribe(function(value)
-		table.insert(values, value)
-	end)
-	return values, connection
+	return events, connection
 end
 
 describe("Observable", function()
-	it("does nothing until subscribed", function()
-		local runs = 0
-		local observable = Observable.new(function()
-			runs += 1
-			return nil
-		end)
-
-		expect(runs).toBe(0)
-		observable:subscribe(print)
-		observable:subscribe(print)
-		expect(runs).toBe(2)
-	end)
-
-	it("forwards every emitted value", function()
-		local observable, emit = subject()
-		local values = collect(observable)
-		emit(1)
-		emit(2)
-		expect(values).toEqual({ 1, 2 })
-	end)
-
-	it("stops and cleans up once disconnected", function()
-		local observable, emit, running = subject()
-		local values, connection = collect(observable)
-
-		emit(1)
+	it("gives a brio per value, killed by the next value and on disconnect", function()
+		local state = Stream.state("a")
+		local events, connection = journal(Observable.new(state))
+		state:set("b")
 		connection:disconnect()
-		emit(2)
-
-		expect(values).toEqual({ 1 })
-		expect(running()).toBe(0)
+		state:set("c")
+		expect(events).toEqual({ "+a", "-a", "+b", "-b" })
+		expect(connection.connected).toBe(false)
 	end)
 
-	it("drops values emitted after disconnecting even without a cleanup", function()
-		local saved_emit: any = nil
-		local observable = Observable.new(function(emit)
-			saved_emit = emit
-			return nil
-		end)
+	it("gives a brio per item of a life stream, killed when it leaves", function()
+		local folder = roblox.new("Folder")
+		local a = roblox.new("Part")
+		a.Name = "a"
+		a.Parent = folder
 
-		local values, connection = collect(observable)
+		local events, connection = journal(Observable.new(Stream.children(folder)))
+		local b = roblox.new("Part")
+		b.Name = "b"
+		b.Parent = folder
+		a.Parent = nil
 		connection:disconnect()
-		saved_emit(1)
-		expect(#values).toBe(0)
+		expect(events).toEqual({ "+a", "+b", "-a", "-b" })
 	end)
 
-	it("emits a constant with from_value", function()
-		expect((collect(Observable.from_value("hi")))).toEqual({ "hi" })
+	it("doesn't make a void for a brio nobody asks one of", function()
+		local brios = {}
+		Observable.new(Stream.of(1)):subscribe(function(brio)
+			table.insert(brios, brio)
+		end)
+		expect((brios[1] :: any)._void).toBeNil()
+		expect(brios[1]:is_dead()).toBe(false)
 	end)
 
-	it("wraps objects with a connect method with from_signal", function()
-		local listeners: { (...any) -> () } = {}
-		local signal = {
-			connect = function(_, listener: (...any) -> ())
-				table.insert(listeners, listener)
-				return {
-					disconnect = function()
-						table.remove(listeners, table.find(listeners, listener))
-					end,
-				}
-			end,
-		}
+	it("errors on anything other than a stream", function()
+		expect(function()
+			Observable.new(5 :: any)
+		end).toThrow("needs a Stream or a LifeStream")
+	end)
 
-		local values, connection = collect(Observable.from_signal(signal))
-		local sums = collect(Observable.from_signal(signal, function(a, b)
+	it("makes observables from a value or a signal", function()
+		local events, connection = journal(Observable.from_value("only"))
+		connection:disconnect()
+		expect(events).toEqual({ "+only", "-only" })
+
+		local signal = roblox.signal()
+		local fired = journal(Observable.from_signal(signal :: any, function(a, b)
 			return a + b
 		end))
-
-		for _, listener in table.clone(listeners) do
-			listener(2, 3)
-		end
-
-		expect(values).toEqual({ 2 })
-		expect(sums).toEqual({ 5 })
-
-		connection:disconnect()
-		expect(#listeners).toBe(1)
-	end)
-
-	it("maps, filters and skips duplicates", function()
-		local observable, emit = subject()
-		local values = collect(observable
-			:map(function(value)
-				return value * 10
-			end)
-			:filter(function(value)
-				return value > 10
-			end)
-			:changed())
-
-		for _, value in { 1, 2, 2, 3, 1, 3 } do
-			emit(value)
-		end
-
-		expect(values).toEqual({ 20, 30 })
-	end)
-
-	it("disconnects derived subscriptions upstream", function()
-		local observable, emit, running = subject()
-		local _, connection = collect(observable:map(tostring))
-
-		expect(running()).toBe(1)
-		connection:disconnect()
-		expect(running()).toBe(0)
-		emit(1)
-	end)
-
-	it("applies custom operators with use", function()
-		local observable = Observable.from_value(3)
-		local result = observable:use(function(source)
-			return source:map(function(value)
-				return value + 1
-			end)
-		end)
-
-		expect((collect(result))).toEqual({ 4 })
-	end)
-
-	it("disconnects every subscription when destroyed", function()
-		local observable, emit, running = subject()
-		local first = collect(observable)
-		local second = collect(observable)
-
-		observable:destroy()
-		emit(1)
-
-		expect(#first + #second).toBe(0)
-		expect(running()).toBe(0)
-	end)
-
-	it("cleans up when the subscription ends while the producer runs", function()
-		local cleaned = 0
-		local observable = Observable.new(function(emit)
-			emit(1)
-			emit(2)
-			return function()
-				cleaned += 1
-			end
-		end)
-
-		local values: { any } = {}
-		local connection: any
-		connection = observable:subscribe(function(value)
-			table.insert(values, value)
-			if connection then
-				connection:disconnect()
-			end
-		end)
-		connection:disconnect()
-
-		expect(values).toEqual({ 1, 2 })
-		expect(cleaned).toBe(1)
-
-		local first: { any } = {}
-		local own: any
-		own = Observable.new(function(emit)
-			own:destroy()
-			emit(1)
-			return function()
-				cleaned += 1
-			end
-		end)
-		own:subscribe(function(value)
-			table.insert(first, value)
-		end)
-
-		expect(#first).toBe(0)
-		expect(cleaned).toBe(2)
-	end)
-
-	it("compares with a custom equals in changed", function()
-		local observable, emit = subject()
-		local values = collect(observable:changed(function(a, b)
-			return math.floor(a) == math.floor(b)
-		end))
-
-		for _, value in { 1, 1.5, 2, 2.9, 1 } do
-			emit(value)
-		end
-
-		expect(values).toEqual({ 1, 2, 1 })
-	end)
-
-	it("rejects values that can't be connected to", function()
-		expect(function()
-			Observable.from_signal(5 :: any)
-		end).toThrow()
-		expect(function()
-			Observable.from_signal({} :: any)
-		end).toThrow()
+		signal.fire(1, 2)
+		signal.fire(3, 4)
+		expect(fired).toEqual({ "+3", "-3", "+7" })
 	end)
 
 	it("tells observables apart", function()
 		expect(Observable.is(Observable.from_value(1))).toBe(true)
-		expect(Observable.is({})).toBe(false)
+		expect(Observable.is(Stream.of(1))).toBe(false)
+	end)
+
+	it("filters values, still killing the brio of the value before", function()
+		local state = Stream.state(1)
+		local events = journal(Observable.new(state):filter(function(value)
+			return value ~= 2
+		end))
+		state:set(2)
+		state:set(3)
+		expect(events).toEqual({ "+1", "-1", "+3" })
+	end)
+
+	it("filters items", function()
+		local folder = roblox.new("Folder")
+		local events = journal(Observable.new(Stream.children(folder)):filter(function(child)
+			return child:IsA("BasePart")
+		end))
+		local part = roblox.new("Part")
+		part.Name = "part"
+		part.Parent = folder
+		local other = roblox.new("Folder")
+		other.Name = "other"
+		other.Parent = folder
+		expect(events).toEqual({ "+part" })
+	end)
+
+	it("maps values, after a filter too", function()
+		local state = Stream.state(1)
+		local events = journal(Observable.new(state)
+			:filter(function(value)
+				return value > 0
+			end)
+			:map(function(value)
+				return value * 10
+			end))
+		state:set(-1)
+		state:set(2)
+		expect(events).toEqual({ "+10", "-10", "+20" })
+	end)
+
+	it("keeps the brio alive while the value doesn't change", function()
+		local state = Stream.state({ id = 1 })
+		local brios = {}
+		Observable.new(state)
+			:changed(function(last, new)
+				return last.id == new.id
+			end)
+			:subscribe(function(brio)
+				table.insert(brios, brio)
+			end)
+		state:set({ id = 1 })
+		expect(#brios).toBe(1)
+		state:set({ id = 2 })
+		expect(#brios).toBe(2)
+		expect(brios[1]:is_dead()).toBe(true)
+	end)
+
+	it("only maps and dedupes observables of values", function()
+		local players = Observable.new(Stream.players())
+		expect(function()
+			players:map(tostring)
+		end).toThrow("map only works on an observable made from a Stream")
+		expect(function()
+			players:changed()
+		end).toThrow("changed only works on an observable made from a Stream")
+	end)
+
+	it("chains custom operators with use", function()
+		local events = journal(Observable.from_value(2):use(function(source)
+			return source:map(function(value)
+				return value * 2
+			end)
+		end))
+		expect(events).toEqual({ "+4" })
+	end)
+
+	it("disconnects every subscription with destroy, and works afterwards", function()
+		local subject = Stream.subject()
+		local observable = Observable.new(subject)
+		local events, connection = journal(observable)
+		subject:fire("a")
+		observable:destroy()
+		subject:fire("b")
+		expect(events).toEqual({ "+a", "-a" })
+		expect(connection.connected).toBe(false)
+
+		local later = journal(observable)
+		subject:fire("c")
+		expect(later).toEqual({ "+c" })
 	end)
 end)
 

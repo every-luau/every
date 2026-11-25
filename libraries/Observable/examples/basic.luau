@@ -1,59 +1,51 @@
 --!strict
--- Creating observables, deriving new ones from them and subscribing.
+-- Wrapping streams in observables, and using the brio of each value or item.
+
+local Players = game:GetService("Players")
 
 local Observable = require("../src")
+local Stream = require("../../Stream/src")
 
--- A producer emits values, and returns what to undo when the subscription ends.
-local seconds = Observable.new(function(emit: (number) -> ())
-	local elapsed = 0
-	local thread = task.spawn(function()
-		while true do
-			task.wait(1)
-			elapsed += 1
-			emit(elapsed)
-		end
+-- A life stream gives a brio per item: here one per player, killed when they
+-- leave. The Void of a brio is only made when asked for.
+Observable.new(Stream.players()):subscribe(function(brio)
+	local void, player = brio:to_void_and_value()
+	print(`{player.Name} joined`)
+	void:add(function()
+		print(`{player.Name} left`)
 	end)
-
-	return function()
-		task.cancel(thread)
-	end
 end)
 
--- Nothing runs until something subscribes, and each subscription runs the producer again.
-local connection = seconds
-	:filter(function(value)
-		return value % 2 == 0
-	end)
-	:map(function(value)
-		return `{value} seconds`
-	end)
-	:subscribe(print) --> 2 seconds, 4 seconds...
-
-task.wait(5)
-connection:disconnect() -- cancels the thread above
-
--- `from_signal` follows a signal, and `changed` skips values equal to the previous one.
-local humanoid = Instance.new("Humanoid")
-local alive = Observable.from_signal(humanoid.HealthChanged, function(health: number)
-	return health > 0
-end):changed()
-
-alive:subscribe(function(value)
-	print(if value then "alive" else "dead")
+-- A stream gives a brio per value, killed when the next one comes.
+local gravity = Observable.new(Stream.property(workspace, "Gravity"))
+gravity:subscribe(function(brio)
+	local value = brio:get_value()
+	print("gravity is", value)
 end)
 
-humanoid.Health = 50 --> alive
-humanoid.Health = 20 -- still alive, skipped
-humanoid.Health = 0 --> dead
+-- filter still kills the brio of the value before, so this warning only lasts
+-- while the health is low.
+local character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid") :: Humanoid
 
--- `use` chains operators written outside the library.
-local function doubled(source)
-	return source:map(function(value: number)
-		return value * 2
+local connection = Observable.new(Stream.property(humanoid, "Health"))
+	:filter(function(health: number)
+		return health < 20
 	end)
-end
+	:map(function(health: number)
+		return math.floor(health)
+	end)
+	:changed()
+	:subscribe(function(brio)
+		local void, health = brio:to_void_and_value()
+		warn(`low health: {health}`)
+		void:add(function()
+			print("health is fine again, or changed")
+		end)
+	end)
 
-Observable.from_value(21):use(doubled):subscribe(print) --> 42
-
--- `destroy` ends every subscription to `alive`.
-alive:destroy()
+-- Disconnecting kills every brio it gave.
+task.delay(30, function()
+	connection:disconnect()
+	gravity:destroy()
+end)

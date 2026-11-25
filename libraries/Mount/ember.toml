@@ -1,0 +1,24 @@
+[package]
+name = "every/mount"
+version = "0.0.1"
+description = "Mount builds instances out of props, where any property can be a stream."
+authors = []
+repository = "every-luau/every"
+license = "MIT"
+
+[target]
+environment = "shared"
+main = "src/init.luau"
+includes = ["src", "default.project.json", "README.md", "LICENSE"]
+
+[dependencies]
+Connection = { name = "every/connection", version = "^0.0.1" }
+Stream = { name = "every/stream", version = "^0.0.1" }
+Void = { name = "every/void", version = "^0.0.1" }
+
+[tools]
+lest = "lest-luau/lest@0.6.0"
+rojo = "rojo-rbx/rojo@7.7.0"
+
+[scripts]
+test = "lest"

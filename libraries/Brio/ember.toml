@@ -1,0 +1,22 @@
+[package]
+name = "every/brio"
+version = "0.0.1"
+description = "Brio holds a value while it is alive, and cleans what was made for it once it dies."
+authors = []
+repository = "every-luau/every"
+license = "MIT"
+
+[target]
+environment = "shared"
+main = "src/init.luau"
+includes = ["src", "default.project.json", "README.md", "LICENSE"]
+
+[dependencies]
+Void = { name = "every/void", version = "^0.0.1" }
+
+[tools]
+lest = "lest-luau/lest@0.6.0"
+rojo = "rojo-rbx/rojo@7.7.0"
+
+[scripts]
+test = "lest"
