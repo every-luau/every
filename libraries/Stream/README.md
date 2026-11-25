@@ -2,7 +2,7 @@
 
 Stream follows values over time and builds reactive code out of them
 
-chain methods like `map`, `filter` or `switch` to make new streams, then `listen` or `each` to use the values. life streams follow sets of things that come and go, like players or tagged parts. to build UI out of streams, use [Mount](https://every-luau.github.io/docs/mount)
+chain methods like `map`, `filter` or `switch` to make new streams, then `listen` or `each` to use the values. to follow sets of things that come and go, like players or tagged parts, use [Observable](https://every-luau.github.io/docs/observable). to build UI out of streams, use [Mount](https://every-luau.github.io/docs/mount)
 
 **[Documentation](https://every-luau.github.io/docs/stream)**
 
@@ -31,17 +31,11 @@ local connection = Stream.character(Players.LocalPlayer)
 	:listen(print)
 connection:disconnect()
 
--- something for each player while they are in the game
-Stream.players():each(function(player, void)
-	print(`{player.Name} joined`)
-	void:add(function()
-		print(`{player.Name} left`)
-	end)
-end)
-
--- every part tagged Lava inside workspace
-Stream.tagged("Lava", workspace):each(function(part, void)
-	void:add(part.Touched:Connect(kill))
+-- something while the humanoid sits, undone when it gets up
+Stream.property(humanoid, "Sit"):each(function(sitting, void)
+	if sitting then
+		void:add(show_seat_menu())
+	end
 end)
 
 -- the search box, once the player stopped typing

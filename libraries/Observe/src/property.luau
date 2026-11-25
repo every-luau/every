@@ -9,7 +9,7 @@ const Stream = require(script.Parent.Parent.Stream)
 	@return Observable<any>
 
 	observes the property `name` of `instance`: a brio for its value now and
-	every time it changes, killed by the next one
+	every time it changes, killed by the next one. nil gives no brio
 
 	```lua
 	Observe.property(humanoid, "Sit")
@@ -23,5 +23,5 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(instance: Instance, name: string): Observable.Observable<any>
-	return Observable.new(Stream.property(instance, name))
+	return Observable.from_stream(Stream.property(instance, name))
 end

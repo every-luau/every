@@ -1,7 +1,7 @@
 [package]
 name = "every/observable"
 version = "0.0.1"
-description = "Observable hands out a Brio for every value or item of a Stream, alive while it lasts."
+description = "Observable follows a set of things that come and go, and hands out a Brio for each while it is there."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

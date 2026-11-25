@@ -8,21 +8,24 @@ Documentation: https://every-luau.github.io
 | --- | --- |
 | [Atom](libraries/Atom) | Atom is a value that can be observed, derived and updated. |
 | [BetterScale](libraries/BetterScale) | BetterScale scales a UIScale with the size of its gui, configured with attributes. |
-| [Bootstrap](libraries/Bootstrap) | Bootstrap requires ModuleScripts and calls their hooks in order of priority. |
+| [Brio](libraries/Brio) | Brio holds a value while it is alive, and cleans what was made for it once it dies. |
+| [Caffeine](libraries/Caffeine) | Caffeine keeps unanchored parts from falling asleep in Roblox physics. |
+| [Cieluv](libraries/Cieluv) | Cieluv converts Color3 to and from CIELUV, and blends colors through it. |
 | [Connection](libraries/Connection) | Connection is like Roblox's RBXScriptConnection, but for your own code. |
 | [Future](libraries/Future) | Future is a value available later, with chaining, combinators and cancellation. |
 | [Lifecycle](libraries/Lifecycle) | Lifecycle builds objects whose lifecycle hooks are registered with chainable calls. |
 | [Loop](libraries/Loop) | Loop calls a callback every few seconds, driven by Heartbeat. |
-| [Observable](libraries/Observable) | Observable is a reactive stream of values to subscribe to, map, filter and dedupe. |
-| [Observe](libraries/Observe) | Observe runs a callback for every player, character, instance, tag or value, now and later. |
+| [Mount](libraries/Mount) | Mount builds instances out of props, where any property can be a stream. |
+| [Observable](libraries/Observable) | Observable follows a set of things that come and go, and hands out a Brio for each while it is there. |
+| [Observe](libraries/Observe) | Observe hands out a Brio for every player, character, instance, tag or value, now and later. |
 | [Ratelimit](libraries/Ratelimit) | Ratelimit limits how many times something can happen per key within an interval. |
 | [Region](libraries/Region) | Region is a box that reports what enters and leaves it, every frame, without physics queries. |
 | [Retryer](libraries/Retryer) | Retryer calls a function again until it stops erroring, with different waits. |
 | [Signal](libraries/Signal) | Signal is a yield-safe signal whose handlers run on a recycled thread. |
+| [Stream](libraries/Stream) | Stream follows values over time and builds reactive code out of them. |
 | [Thread](libraries/Thread) | Thread runs callbacks on a recycled thread instead of creating a new one per call. |
 | [Timer](libraries/Timer) | Timer is a stopwatch or countdown with a speed, updated every frame. |
 | [Void](libraries/Void) | Void keeps track of things to clean up, and cleans them all at once. |
-| [Volume](libraries/Volume) | Volume is a box made of a CFrame and a size, with containment checks. |
 | [Weight](libraries/Weight) | Weight picks random keys from a table of weights, with an optional luck factor. |
 
 ## Layout

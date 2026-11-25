@@ -19,7 +19,5 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(player: Player): Observable.Observable<Model>
-	return Observable.new(Stream.character(player)):filter(function(character: Model?): boolean
-		return character ~= nil
-	end) :: any
+	return Observable.from_stream(Stream.character(player)) :: any
 end

@@ -1,5 +1,7 @@
 const Observable = require(script.Parent.Parent.Observable)
-const Stream = require(script.Parent.Parent.Stream)
+
+const character = require("./character")
+const players = require("./players")
 
 --[=[
 	@within Observe
@@ -19,5 +21,5 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(): Observable.Observable<Model>
-	return Observable.new(Stream.characters())
+	return players():flat_map(character)
 end

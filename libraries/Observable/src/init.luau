@@ -3,30 +3,42 @@
 --[=[
 	@class Observable
 
-	Observable hands out a [Brio] for every value or item of a [Stream], alive while it lasts
+	Observable follows a set of things that come and go, and hands out a [Brio] for each while it is there
 
-	wrap a stream with [Observable.new] and subscribe. the callback gets a
-	[Brio] for each value of a stream, killed when the next value comes, or for
-	each item of a [LifeStream], killed when the item leaves. everything added
-	to [Brio:to_void] goes away with it
+	an observable announces when an item joins and when it leaves, like the
+	players in the game or the parts with a tag. [Observable:subscribe] gives a
+	[Brio] for every item there now and joining later, killed when it leaves.
+	everything added to [Brio:to_void] goes away with it
 
 	```lua
 	local Observable = require(path.to.Observable)
-	local Stream = require(path.to.Stream)
 
-	local lava = Observable.new(Stream.tagged("Lava"))
+	local friends = Observable.new(function(emit, void)
+		for _, friend in get_friends() do
+			emit(friend, true)
+		end
+		void:add(friend_added:Connect(function(friend)
+			emit(friend, true)
+		end))
+		void:add(friend_removed:Connect(function(friend)
+			emit(friend, false)
+		end))
+	end)
 
-	local connection = lava:subscribe(function(brio)
-		local void, part = brio:to_void_and_value()
-		void:add(part.Touched:Connect(kill))
+	local connection = friends:subscribe(function(brio)
+		local void, friend = brio:to_void_and_value()
+		void:add(show_online_badge(friend))
 	end)
 
 	connection:disconnect()
 	```
 
+	[Observable.from_stream] turns a [Stream] into an observable whose only item
+	is its latest value, so a value and a set are used the same way
+
 	:::info
-	an observable is cold like its stream: nothing runs until something
-	subscribes, and each subscription runs the stream again
+	an observable is cold: nothing runs until something subscribes, and each
+	subscription runs the producer again
 	:::
 ]=]
 
@@ -40,7 +52,16 @@ export type Brio<T> = Brio.Brio<T>
 export type Connection = Connection.Connection
 export type Void = Void.Void
 type Stream<T> = Stream.Stream<T>
-type LifeStream<T> = Stream.LifeStream<T>
+
+--[=[
+	@within Observable
+	@type Producer (emit: (item: T, alive: boolean) -> (), void: Void) -> ()
+
+	emits `(item, true)` when an item joins and `(item, false)` when it
+	leaves, and adds to the [Void] whatever it starts. emitting an item that
+	is already there, or one that isn't, does nothing, and nil is never an item
+]=]
+export type Producer<T> = (emit: (item: T, alive: boolean) -> (), void: Void) -> ()
 
 --[=[
 	@within Observable
@@ -52,9 +73,11 @@ export type Operator<T, U> = (source: Observable<T>) -> Observable<U>
 
 export type Observable<T> = {
 	subscribe: (self: Observable<T>, callback: (brio: Brio<T>) -> ()) -> Connection,
-	filter: (self: Observable<T>, predicate: (value: T) -> boolean) -> Observable<T>,
-	map: (self: Observable<T>, transform: (value: T) -> any) -> any,
-	changed: (self: Observable<T>, equals: ((last: T, new: T) -> boolean)?) -> Observable<T>,
+	listen: (self: Observable<T>, listener: (item: T, alive: boolean) -> ()) -> Connection,
+	filter: (self: Observable<T>, predicate: (item: T) -> boolean) -> Observable<T>,
+	map: (self: Observable<T>, transform: (item: T) -> any) -> any,
+	flat_map: (self: Observable<T>, project: (item: T) -> any) -> any,
+	count: (self: Observable<T>) -> Stream<number>,
 	use: (self: Observable<T>, operator: (source: Observable<T>) -> any) -> any,
 	destroy: (self: Observable<T>) -> (),
 }
@@ -68,40 +91,85 @@ export type Observable<T> = {
 ]=]
 export type SignalLike = Stream.SignalLike
 
--- what a filtered out value of a stream becomes, so the brio of the value
--- before it still dies
-const SKIP = newproxy(false)
-
 const Observable = {}
 Observable.__index = Observable
-
--- `life` tells whether `stream` is a life stream, whose items each get a brio
-const function wrap(stream: any, life: boolean): any
-	return setmetatable({ _stream = stream, _life = life, _connections = Void.new() }, Observable)
-end
 
 --[=[
 	@within Observable
 	@function new
-	@param stream Stream<T> | LifeStream<T>
+	@param producer Producer<T>
 	@return Observable<T>
-	@error "[Observable] needs a Stream or a LifeStream, got a ..."
 
-	creates an observable from `stream`. a [Stream] gives a brio per value, and
-	a [LifeStream] a brio per item
+	creates an observable that runs `producer` once per subscription. the
+	items it emits are kept track of, so emitting one twice or removing one
+	that isn't there is safe
 
 	```lua
-	local sitting = Observable.new(Stream.property(humanoid, "Sit"))
-	local players = Observable.new(Stream.players())
+	local children = Observable.new(function(emit, void)
+		void:add(folder.ChildAdded:Connect(function(child)
+			emit(child, true)
+		end))
+		void:add(folder.ChildRemoved:Connect(function(child)
+			emit(child, false)
+		end))
+		for _, child in folder:GetChildren() do
+			emit(child, true)
+		end
+	end)
 	```
 ]=]
-function Observable.new<T>(stream: Stream<T> | LifeStream<T>): Observable<T>
-	if Stream.is(stream) then
-		return wrap(stream, false)
-	elseif Stream.is_life(stream) then
-		return wrap(stream, true)
-	end
-	error(`[Observable] needs a Stream or a LifeStream, got a {typeof(stream)}`, 2)
+function Observable.new<T>(producer: Producer<T>): Observable<T>
+	return setmetatable({ _producer = producer, _connections = Void.new() }, Observable) :: any
+end
+
+-- runs the producer of `observable` for `listener`, which only hears about
+-- each item joining once and leaving once, with `void` holding what it starts
+const function run(observable: any, listener: (item: any, alive: boolean) -> (), void: Void)
+	const items: { [any]: true } = {}
+	observable._producer(function(item: any, alive: boolean)
+		if item == nil then
+			return
+		elseif alive and not items[item] then
+			items[item] = true
+			listener(item, true)
+		elseif not alive and items[item] then
+			items[item] = nil
+			listener(item, false)
+		end
+	end, void)
+end
+
+--[=[
+	@within Observable
+	@function from_stream
+	@param stream Stream<T>
+	@return Observable<T>
+
+	creates an observable whose only item is the latest value of `stream`. a
+	new value replaces it, and nil leaves nothing there, so a brio lives until
+	the value changes
+
+	```lua
+	local sitting = Observable.from_stream(Stream.property(humanoid, "Sit"))
+	```
+]=]
+function Observable.from_stream<T>(stream: Stream<T>): Observable<T>
+	assert(Stream.is(stream), `[Observable.from_stream] needs a Stream, got a {typeof(stream)}`)
+	return Observable.new(function(emit: (T, boolean) -> (), void: Void)
+		-- the item there now, nil when there is none
+		local current: any = nil
+		void:add(stream:listen(function(value: any)
+			if current ~= nil then
+				const last = current
+				current = nil
+				emit(last, false)
+			end
+			if value ~= nil then
+				current = value
+				emit(value, true)
+			end
+		end))
+	end)
 end
 
 --[=[
@@ -110,11 +178,13 @@ end
 	@param value T
 	@return Observable<T>
 
-	creates an observable that gives every subscription one brio for `value`,
-	alive until the subscription ends
+	creates an observable whose only item is `value`, there until the
+	subscription ends
 ]=]
 function Observable.from_value<T>(value: T): Observable<T>
-	return wrap(Stream.of(value), false)
+	return Observable.new(function(emit: (T, boolean) -> ())
+		emit(value, true)
+	end)
 end
 
 --[=[
@@ -124,18 +194,18 @@ end
 	@param transform ((...any) -> T)?
 	@return Observable<T>
 
-	creates an observable that gives a brio for every fire of `signal`, alive
-	until the next one. each fire gives its first value, or `transform(...)`
-	with every fired value when `transform` is given
+	creates an observable whose only item is the latest fire of `signal`,
+	replaced by the next one. each fire gives its first value, or
+	`transform(...)` with every fired value when `transform` is given
 
 	```lua
-	local touches = Observable.from_signal(part.Touched, function(hit)
+	local touching = Observable.from_signal(part.Touched, function(hit)
 		return hit.Parent
 	end)
 	```
 ]=]
 function Observable.from_signal<T>(signal: SignalLike, transform: ((...any) -> T)?): Observable<T>
-	return wrap(Stream.signal(signal, transform), false)
+	return Observable.from_stream(Stream.signal(signal, transform))
 end
 
 --[=[
@@ -163,20 +233,35 @@ const function track(observable: any, stop: () -> ()): Connection
 	return connection
 end
 
+-- runs `observable` for `listener` until the returned function is called,
+-- after which nothing is passed on
+const function open(observable: any, listener: (item: any, alive: boolean) -> ()): () -> ()
+	local active = true
+	const void = Void.new()
+	run(observable, function(item: any, alive: boolean)
+		if active then
+			listener(item, alive)
+		end
+	end, void)
+	return function()
+		active = false
+		void:clean()
+	end
+end
+
 --[=[
 	@within Observable
 	@method subscribe
 	@param callback (brio: Brio<T>) -> ()
 	@return Connection
 
-	calls `callback` with a [Brio] for every value or item, until the
-	[Connection] is disconnected. the brio of a value dies when the next value
-	comes, the brio of an item when the item leaves, and every brio dies on
-	disconnect. `callback` runs on its own thread with [Thread], so it can
-	yield, and [Brio:is_dead] tells if the brio died meanwhile
+	calls `callback` with a [Brio] for every item there now and joining later,
+	killed when the item leaves or the [Connection] is disconnected.
+	`callback` runs on its own thread with [Thread], so it can yield, and
+	[Brio:is_dead] tells if the item left meanwhile
 
 	```lua
-	Observable.new(Stream.players()):subscribe(function(brio)
+	players:subscribe(function(brio)
 		local void, player = brio:to_void_and_value()
 		local leaderstats = void:add(Instance.new("Folder"))
 		leaderstats.Name = "leaderstats"
@@ -185,143 +270,208 @@ end
 	```
 ]=]
 function Observable.subscribe<T>(self: Observable<T>, callback: (brio: Brio<T>) -> ()): Connection
-	const internal = self :: any
-
-	if internal._life then
-		const brios: { [any]: Brio<T> } = {}
-		const listening = internal._stream:listen(function(item: T, alive: boolean)
-			if alive then
-				if brios[item] then
-					return
-				end
-				const brio = Brio.new(item)
-				brios[item] = brio
-				Thread(callback, brio)
-			else
-				const brio = brios[item]
-				if brio then
-					brios[item] = nil
-					brio:destroy()
-				end
-			end
-		end)
-
-		return track(self, function()
-			listening:disconnect()
-			for item, brio in brios do
-				brios[item] = nil
-				brio:destroy()
-			end
-		end)
-	end
-
-	local current: Brio<T>? = nil
-	const listening = internal._stream:listen(function(value: any)
-		if current then
-			const last = current
-			current = nil
-			last:destroy()
+	const brios: { [any]: Brio<T> } = {}
+	const stop = open(self, function(item: T, alive: boolean)
+		if alive then
+			const brio = Brio.new(item)
+			brios[item] = brio
+			Thread(callback, brio)
+		else
+			const brio = brios[item]
+			brios[item] = nil
+			brio:destroy()
 		end
-		if value == SKIP then
-			return
-		end
-		const brio = Brio.new(value)
-		current = brio
-		Thread(callback, brio)
 	end)
 
 	return track(self, function()
-		listening:disconnect()
-		if current then
-			const last = current
-			current = nil
-			last:destroy()
+		stop()
+		for item, brio in brios do
+			brios[item] = nil
+			brio:destroy()
 		end
 	end)
+end
+
+--[=[
+	@within Observable
+	@method listen
+	@param listener (item: T, alive: boolean) -> ()
+	@return Connection
+
+	calls `listener` with `(item, true)` for every item there now and joining
+	later, and `(item, false)` when one leaves, until the [Connection] is
+	disconnected. disconnecting calls nothing, use [Observable:subscribe] to
+	undo things per item
+]=]
+function Observable.listen<T>(self: Observable<T>, listener: (item: T, alive: boolean) -> ()): Connection
+	return track(self, open(self, listener))
 end
 
 --[=[
 	@within Observable
 	@method filter
-	@param predicate (value: T) -> boolean
+	@param predicate (item: T) -> boolean
 	@return Observable<T>
 
-	returns an observable giving a brio only for what `predicate` accepts. a
-	value that is rejected still kills the brio of the value before it
+	keeps the items `predicate` accepts when they join. with
+	[Observable.from_stream], a rejected value still replaces the one before
 
 	```lua
-	local low_health = Observable.new(Stream.property(humanoid, "Health")):filter(function(health)
-		return health < 20
+	local parts = Observe.descendants(workspace):filter(function(instance)
+		return instance:IsA("BasePart")
 	end)
 	```
 ]=]
-function Observable.filter<T>(self: Observable<T>, predicate: (value: T) -> boolean): Observable<T>
-	const internal = self :: any
-	if internal._life then
-		return wrap(internal._stream:filter(predicate), true)
-	end
-	return wrap(
-		internal._stream:map(function(value: any)
-			return if value == SKIP or not predicate(value) then SKIP else value
-		end),
-		false
-	)
-end
-
--- errors when `self` follows a life stream, for operators that only make
--- sense on values
-const function expect_values(self: any, method: string)
-	if self._life then
-		error(`[Observable] {method} only works on an observable made from a Stream, not a LifeStream`, 3)
-	end
+function Observable.filter<T>(self: Observable<T>, predicate: (item: T) -> boolean): Observable<T>
+	return Observable.new(function(emit: (T, boolean) -> (), void: Void)
+		run(self, function(item: T, alive: boolean)
+			if not alive or predicate(item) then
+				emit(item, alive)
+			end
+		end, void)
+	end)
 end
 
 --[=[
 	@within Observable
 	@method map
-	@param transform (value: T) -> U
+	@param transform (item: T) -> U
 	@return Observable<U>
-	@error "[Observable] map only works on an observable made from a Stream, not a LifeStream"
 
-	returns an observable giving a brio for `transform(value)` instead of
-	`value`
+	gives `transform(item)` for every item instead. items mapped to the same
+	value share it, which leaves once all of them left, and nil is left out
 ]=]
-function Observable.map<T>(self: Observable<T>, transform: (value: T) -> any): any
-	expect_values(self, "map")
-	return wrap(
-		(self :: any)._stream:map(function(value: any)
-			return if value == SKIP then SKIP else transform(value)
-		end),
-		false
-	)
+function Observable.map<T>(self: Observable<T>, transform: (item: T) -> any): any
+	return Observable.new(function(emit: (any, boolean) -> (), void: Void)
+		const mapped: { [any]: any } = {}
+		const counts: { [any]: number } = {}
+		run(self, function(item: T, alive: boolean)
+			if alive then
+				const value = transform(item)
+				if value == nil then
+					return
+				end
+				mapped[item] = value
+				counts[value] = (counts[value] or 0) + 1
+				if counts[value] == 1 then
+					emit(value, true)
+				end
+			else
+				const value = mapped[item]
+				if value == nil then
+					return
+				end
+				mapped[item] = nil
+				counts[value] -= 1
+				if counts[value] == 0 then
+					counts[value] = nil
+					emit(value, false)
+				end
+			end
+		end, void)
+	end)
 end
 
 --[=[
 	@within Observable
-	@method changed
-	@param equals ((last: T, new: T) -> boolean)?
-	@return Observable<T>
-	@error "[Observable] changed only works on an observable made from a Stream, not a LifeStream"
+	@method flat_map
+	@param project (item: T) -> Observable<U>?
+	@return Observable<U>
 
-	returns an observable that skips a value equal to the last one, compared
-	with `==` or with `equals` when it is given, so its brio stays alive
+	gives the items of the observable `project` returns for each item, which
+	leave when that item does. returning nil gives nothing for that item
 
-	:::info
-	the first value always gets a brio, and each subscription remembers its
-	own last value
-	:::
+	```lua
+	-- the character of every player
+	local characters = Observe.players():flat_map(Observe.character)
+	```
 ]=]
-function Observable.changed<T>(self: Observable<T>, equals: ((last: T, new: T) -> boolean)?): Observable<T>
-	expect_values(self, "changed")
-	return wrap(
-		(self :: any)._stream:changed(function(last: any, new: any): boolean
-			if last ~= SKIP and new ~= SKIP and equals then
-				return equals(last, new)
+function Observable.flat_map<T>(self: Observable<T>, project: (item: T) -> any): any
+	return Observable.new(function(emit: (any, boolean) -> (), void: Void)
+		-- what each item's observable gives, counted, since two items can give
+		-- the same thing
+		const counts: { [any]: number } = {}
+		const stops: { [any]: () -> () } = {}
+
+		const function inner_listener(owned: { [any]: true })
+			return function(value: any, alive: boolean)
+				if alive then
+					owned[value] = true
+					counts[value] = (counts[value] or 0) + 1
+					if counts[value] == 1 then
+						emit(value, true)
+					end
+				elseif owned[value] then
+					owned[value] = nil
+					counts[value] -= 1
+					if counts[value] == 0 then
+						counts[value] = nil
+						emit(value, false)
+					end
+				end
 			end
-			return last == new
-		end),
-		false
-	)
+		end
+
+		run(self, function(item: T, alive: boolean)
+			if alive then
+				const inner = project(item)
+				if inner == nil then
+					return
+				end
+				const owned: { [any]: true } = {}
+				const listener = inner_listener(owned)
+				const stop = open(inner, listener)
+				stops[item] = function()
+					stop()
+					for value in table.clone(owned) do
+						listener(value, false)
+					end
+				end
+			else
+				const stop = stops[item]
+				if stop then
+					stops[item] = nil
+					stop()
+				end
+			end
+		end, void)
+
+		void:add(function()
+			for item, stop in stops do
+				stops[item] = nil
+				stop()
+			end
+		end)
+	end)
+end
+
+--[=[
+	@within Observable
+	@method count
+	@return Stream<number>
+
+	a [Stream] of how many items are there, emitted when subscribed and each
+	time it changes
+
+	```lua
+	Observe.players():count():listen(function(count)
+		print(`{count} players`)
+	end)
+	```
+]=]
+function Observable.count<T>(self: Observable<T>): Stream<number>
+	return Stream.new(function(emit: (number) -> (), void: Void)
+		local count = 0
+		local ready = false
+		run(self, function(_item: T, alive: boolean)
+			count += if alive then 1 else -1
+			if ready then
+				emit(count)
+			end
+		end, void)
+		ready = true
+		emit(count)
+	end)
 end
 
 --[=[
@@ -333,13 +483,13 @@ end
 	returns `operator(self)`, so your own operators chain like `map` and `filter`
 
 	```lua
-	local function alive(source)
-		return source:filter(function(humanoid)
-			return humanoid.Health > 0
+	local function anchored(source)
+		return source:filter(function(part)
+			return part.Anchored
 		end)
 	end
 
-	humanoids:use(alive):subscribe(print)
+	parts:use(anchored):subscribe(print)
 	```
 ]=]
 function Observable.use<T>(self: Observable<T>, operator: (source: Observable<T>) -> any): any
@@ -350,9 +500,10 @@ end
 	@within Observable
 	@method destroy
 
-	disconnects every subscription to this observable, which kills their
-	brios. you can still subscribe to it afterwards, and observables made from
-	it keep working
+	disconnects every [Connection] that [Observable:subscribe] and
+	[Observable:listen] gave for this observable, which kills their brios. you
+	can still subscribe to it afterwards, and observables made from it keep
+	working
 ]=]
 function Observable.destroy<T>(self: Observable<T>)
 	(self :: any)._connections:clean()
@@ -362,6 +513,7 @@ table.freeze(Observable)
 
 return table.freeze({
 	new = Observable.new,
+	from_stream = Observable.from_stream,
 	from_value = Observable.from_value,
 	from_signal = Observable.from_signal,
 	is = Observable.is,

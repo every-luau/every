@@ -1,5 +1,6 @@
 const Observable = require(script.Parent.Parent.Observable)
-const Stream = require(script.Parent.Parent.Stream)
+
+const signals = require("./signals")
 
 --[=[
 	@within Observe
@@ -18,5 +19,7 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(parent: Instance): Observable.Observable<Instance>
-	return Observable.new(Stream.children(parent))
+	return signals(function()
+		return parent:GetChildren()
+	end, parent.ChildAdded, parent.ChildRemoved)
 end

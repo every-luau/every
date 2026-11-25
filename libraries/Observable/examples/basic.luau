@@ -1,14 +1,28 @@
 --!strict
--- Wrapping streams in observables, and using the brio of each value or item.
+-- Following sets of things that come and go, with a brio for each item.
 
 local Players = game:GetService("Players")
 
 local Observable = require("../src")
 local Stream = require("../../Stream/src")
 
--- A life stream gives a brio per item: here one per player, killed when they
--- leave. The Void of a brio is only made when asked for.
-Observable.new(Stream.players()):subscribe(function(brio)
+-- A producer emits (item, true) when an item joins and (item, false) when it
+-- leaves. Here, every player in the game.
+local players = Observable.new(function(emit, void)
+	void:add(Players.PlayerAdded:Connect(function(player)
+		emit(player, true)
+	end))
+	void:add(Players.PlayerRemoving:Connect(function(player)
+		emit(player, false)
+	end))
+	for _, player in Players:GetPlayers() do
+		emit(player, true)
+	end
+end)
+
+-- A brio per player, killed when they leave. Its Void is only made when
+-- asked for.
+players:subscribe(function(brio)
 	local void, player = brio:to_void_and_value()
 	print(`{player.Name} joined`)
 	void:add(function()
@@ -16,36 +30,37 @@ Observable.new(Stream.players()):subscribe(function(brio)
 	end)
 end)
 
--- A stream gives a brio per value, killed when the next one comes.
-local gravity = Observable.new(Stream.property(workspace, "Gravity"))
-gravity:subscribe(function(brio)
-	local value = brio:get_value()
-	print("gravity is", value)
+-- flat_map follows something for each item: here the character of each
+-- player, from a Stream of their current character.
+local characters = players:flat_map(function(player: Player)
+	return Observable.from_stream(Stream.character(player))
+end)
+characters:subscribe(function(brio)
+	local character = brio:get_value()
+	print(`{character.Name} spawned`)
 end)
 
--- filter still kills the brio of the value before, so this warning only lasts
--- while the health is low.
-local character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+-- count gives a Stream of how many items there are.
+local connection = players:count():listen(function(count: number)
+	print(`{count} players`)
+end)
 
-local connection = Observable.new(Stream.property(humanoid, "Health"))
-	:filter(function(health: number)
-		return health < 20
+-- A Stream's latest value is the only item of from_stream, so the brio lives
+-- until the value changes. filter still replaces the value before.
+Observable.from_stream(Stream.property(workspace, "Gravity"))
+	:filter(function(gravity: number)
+		return gravity < 100
 	end)
-	:map(function(health: number)
-		return math.floor(health)
-	end)
-	:changed()
 	:subscribe(function(brio)
-		local void, health = brio:to_void_and_value()
-		warn(`low health: {health}`)
+		local void, gravity = brio:to_void_and_value()
+		print(`low gravity: {gravity}`)
 		void:add(function()
-			print("health is fine again, or changed")
+			print("gravity changed")
 		end)
 	end)
 
--- Disconnecting kills every brio it gave.
+-- Disconnecting stops, and destroy disconnects every subscription.
 task.delay(30, function()
 	connection:disconnect()
-	gravity:destroy()
+	players:destroy()
 end)

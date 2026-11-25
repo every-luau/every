@@ -37,16 +37,3 @@ Stream.property(workspace, "Gravity"):each(function(gravity, void)
 		print("gravity was", gravity)
 	end)
 end)
-
--- A life stream follows things that come and go, and each cleans the Void of
--- an item when it leaves.
-Stream.players():each(function(player, void)
-	print(`{player.Name} joined`)
-	void:add(function()
-		print(`{player.Name} left`)
-	end)
-end)
-
-Stream.players():count():listen(function(count: number)
-	print(`{count} players`)
-end)

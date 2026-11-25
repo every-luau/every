@@ -30,8 +30,9 @@
 	:::
 
 	:::tip
-	observables chain before subscribing: `filter` keeps what you need, and
-	`map` and `changed` work on observers of values like [Observe.property]
+	observables chain before subscribing: `filter` keeps what you need, `map`
+	turns each item into another, and `flat_map` follows something for each
+	item, like `Observe.players():flat_map(Observe.character)`
 	:::
 ]=]
 

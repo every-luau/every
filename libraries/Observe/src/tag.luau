@@ -1,5 +1,8 @@
+const CollectionService = game:GetService("CollectionService")
+
 const Observable = require(script.Parent.Parent.Observable)
-const Stream = require(script.Parent.Parent.Stream)
+
+const signals = require("./signals")
 
 --[=[
 	@within Observe
@@ -18,5 +21,7 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(tag: string): Observable.Observable<Instance>
-	return Observable.new(Stream.tagged(tag))
+	return signals(function()
+		return CollectionService:GetTagged(tag)
+	end, CollectionService:GetInstanceAddedSignal(tag), CollectionService:GetInstanceRemovedSignal(tag))
 end

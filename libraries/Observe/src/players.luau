@@ -1,5 +1,8 @@
+const Players = game:GetService("Players")
+
 const Observable = require(script.Parent.Parent.Observable)
-const Stream = require(script.Parent.Parent.Stream)
+
+const signals = require("./signals")
 
 --[=[
 	@within Observe
@@ -19,5 +22,7 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(): Observable.Observable<Player>
-	return Observable.new(Stream.players())
+	return signals(function()
+		return Players:GetPlayers()
+	end, Players.PlayerAdded, Players.PlayerRemoving)
 end

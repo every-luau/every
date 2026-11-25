@@ -52,18 +52,6 @@ export type Stream<T> = {
 	attribute: (self: Stream<T>, name: string) -> any,
 	child: (self: Stream<T>, name: string, class_name: string?) -> any,
 	descendant: (self: Stream<T>, name: string, class_name: string?) -> any,
-	children: (self: Stream<T>) -> LifeStream<Instance>,
-	descendants: (self: Stream<T>) -> LifeStream<Instance>,
-}
-
-export type LifeStream<T> = {
-	listen: (self: LifeStream<T>, listener: (item: T, alive: boolean) -> ()) -> Connection,
-	each: (self: LifeStream<T>, callback: (item: T, void: Void) -> (), predicate: ((item: T) -> boolean)?) -> Connection,
-	use: (self: LifeStream<T>, operator: (stream: LifeStream<T>) -> any) -> any,
-	destroy: (self: LifeStream<T>) -> (),
-	filter: (self: LifeStream<T>, predicate: (item: T) -> boolean) -> LifeStream<T>,
-	named: (self: LifeStream<T>, name: string) -> LifeStream<T>,
-	count: (self: LifeStream<T>) -> any,
 }
 
 --[=[

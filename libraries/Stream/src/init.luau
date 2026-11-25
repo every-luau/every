@@ -16,17 +16,9 @@
 	connection:disconnect()
 	```
 
-	a [LifeStream] follows a set of things that come and go, like the players in
-	the game or the parts with a tag, and [LifeStream:each] runs something for
-	each while it is there
-
-	```lua
-	Stream.tagged("Lava"):each(function(part, void)
-		void:add(part.Touched:Connect(kill))
-	end)
-	```
-
-	to build instances whose properties are streams, use [Mount]
+	to follow a set of things that come and go, like the players in the game
+	or the parts with a tag, use [Observable]. to build instances whose
+	properties are streams, use [Mount]
 
 	:::info
 	methods that change the type of the values, like [Stream:map], return an
@@ -47,18 +39,14 @@ export type Connection = stream_types.Connection
 export type Void = stream_types.Void
 export type SignalLike = stream_types.SignalLike
 export type Stream<T> = stream_types.Stream<T>
-export type LifeStream<T> = stream_types.LifeStream<T>
 export type State<T> = stream_types.State<T>
 export type Subject<T> = stream_types.Subject<T>
 
 table.freeze(core.methods)
-table.freeze(core.life_methods)
 
 return table.freeze({
 	new = core.new,
-	life = core.new_life,
 	is = core.is,
-	is_life = core.is_life,
 	of = sources.of,
 	never = sources.never,
 	from = sources.from,
@@ -74,9 +62,4 @@ return table.freeze({
 	character = instances.character,
 	child = instances.child,
 	descendant = instances.descendant,
-	players = instances.players,
-	characters = instances.characters,
-	children = instances.children,
-	descendants = instances.descendants,
-	tagged = instances.tagged,
 })

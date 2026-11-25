@@ -9,7 +9,8 @@ const Stream = require(script.Parent.Parent.Stream)
 	@return Observable<any>
 
 	observes the attribute `name` of `instance`: a brio for its value now and
-	every time it changes, killed by the next one. a missing attribute is nil
+	every time it changes, killed by the next one. a missing attribute gives
+	no brio
 
 	```lua
 	Observe.attribute(player, "Team")
@@ -23,5 +24,5 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(instance: Instance, name: string): Observable.Observable<any>
-	return Observable.new(Stream.attribute(instance, name))
+	return Observable.from_stream(Stream.attribute(instance, name))
 end

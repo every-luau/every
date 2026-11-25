@@ -1,8 +1,8 @@
 # Observable
 
-Observable hands out a Brio for every value or item of a Stream, alive while it lasts
+Observable follows a set of things that come and go, and hands out a Brio for each while it is there
 
-wrap a [Stream](https://every-luau.github.io/docs/stream) with `Observable.new` and subscribe. each value or item comes as a [Brio](https://every-luau.github.io/docs/brio): `brio:get_value()` reads it, and `brio:to_void()` gives a Void cleaned once the value is replaced or the item leaves. chain `filter`, `map` and `changed` before subscribing. subscribing returns a [Connection](https://every-luau.github.io/docs/connection)
+an observable announces when an item joins and when it leaves, like the players in the game or the parts with a tag. subscribing gives a [Brio](https://every-luau.github.io/docs/brio) for every item: `brio:get_value()` reads it, and `brio:to_void()` gives a Void cleaned once the item leaves. `Observable.from_stream` turns a [Stream](https://every-luau.github.io/docs/stream) into an observable whose only item is its latest value. chain `filter`, `map` and `flat_map` before subscribing, which returns a [Connection](https://every-luau.github.io/docs/connection)
 
 **[Documentation](https://every-luau.github.io/docs/observable)**
 
@@ -23,28 +23,33 @@ installs [Brio](https://every-luau.github.io/docs/brio), [Connection](https://ev
 
 ```lua
 local Observable = require(ReplicatedStorage.Packages.Observable)
-local Stream = require(ReplicatedStorage.Packages.Stream)
 
--- a brio per player, killed when they leave
-Observable.new(Stream.players()):subscribe(function(brio)
-	local void, player = brio:to_void_and_value()
-	local leaderstats = void:add(Instance.new("Folder"))
-	leaderstats.Name = "leaderstats"
-	leaderstats.Parent = player
+-- the children of a folder, now and later
+local doors = Observable.new(function(emit, void)
+	void:add(folder.ChildAdded:Connect(function(child)
+		emit(child, true)
+	end))
+	void:add(folder.ChildRemoved:Connect(function(child)
+		emit(child, false)
+	end))
+	for _, child in folder:GetChildren() do
+		emit(child, true)
+	end
 end)
 
--- a brio while the health is low, killed once it goes back up
-local connection = Observable.new(Stream.property(humanoid, "Health"))
-	:filter(function(health)
-		return health < 20
-	end)
-	:subscribe(function(brio)
-		local void = brio:to_void()
-		void:add(show_low_health_warning())
-	end)
+-- a brio per door, killed when it is removed
+local connection = doors:subscribe(function(brio)
+	local void, door = brio:to_void_and_value()
+	void:add(door.Touched:Connect(open))
+end)
+
+-- how many there are
+doors:count():listen(print)
 
 connection:disconnect()
 ```
+
+[Observe](https://every-luau.github.io/docs/observe) has observables ready for players, characters, children, tags and more
 
 ## License
 

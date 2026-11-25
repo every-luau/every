@@ -2,6 +2,8 @@ const Observable = require(script.Parent.Parent.Observable)
 const Stream = require(script.Parent.Parent.Stream)
 const Void = require(script.Parent.Parent.Void)
 
+const children = require("./children")
+
 type Void = Void.Void
 
 --[=[
@@ -25,7 +27,7 @@ type Void = Void.Void
 	```
 ]=]
 return function(player: Player): Observable.Observable<Tool>
-	return Observable.new(Stream.life(function(emit: (Tool, boolean) -> (), void: Void)
+	return Observable.new(function(emit: (Tool, boolean) -> (), void: Void)
 		-- what follows each tool, cleaned when it stops being owned
 		const owned: { [Tool]: Void } = {}
 		-- the character tools can be held by, until it is removed
@@ -68,7 +70,7 @@ return function(player: Player): Observable.Observable<Tool>
 		end
 
 		const function follow_children(parent: Instance): any
-			return Stream.children(parent):listen(function(child: Instance, alive: boolean)
+			return children(parent):listen(function(child: Instance, alive: boolean)
 				if alive then
 					add(child)
 				end
@@ -94,11 +96,12 @@ return function(player: Player): Observable.Observable<Tool>
 			character_void:add(follow_children(model))
 		end))
 
-		void:add(Stream.children(player)
+		void:add(children(player)
 			:filter(function(child: Instance): boolean
 				return child:IsA("Backpack")
 			end)
-			:each(function(backpack: Instance, backpack_void: Void)
+			:subscribe(function(brio)
+				const backpack_void, backpack = brio:to_void_and_value()
 				backpack_void:add(follow_children(backpack))
 			end))
 
@@ -108,5 +111,5 @@ return function(player: Player): Observable.Observable<Tool>
 				tool_void:clean()
 			end
 		end)
-	end))
+	end)
 end

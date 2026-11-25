@@ -1,7 +1,7 @@
 const Observable = require(script.Parent.Parent.Observable)
-const Stream = require(script.Parent.Parent.Stream)
 
-type Void = Stream.Void
+const players = require("./players")
+const property = require("./property")
 
 --[=[
 	@within Observe
@@ -22,25 +22,14 @@ type Void = Stream.Void
 	```
 ]=]
 return function(team: Team): Observable.Observable<Player>
-	return Observable.new(Stream.life(function(emit: (Player, boolean) -> (), void: Void)
-		void:add(Stream.players():each(function(player: Player, player_void: Void)
-			local on_team = false
-
-			player_void:add(Stream.property(player, "Team"):listen(function(current: Team?)
-				const now = current == team
-				if now ~= on_team then
-					on_team = now
-					emit(player, now)
-				end
-			end))
-
-			-- the player left, or observing stopped
-			player_void:add(function()
-				if on_team then
-					on_team = false
-					emit(player, false)
-				end
+	return players():flat_map(function(player: Player)
+		-- the player, while their team is `team`
+		return property(player, "Team")
+			:filter(function(current: Team): boolean
+				return current == team
 			end)
-		end))
-	end))
+			:map(function(): Player
+				return player
+			end)
+	end)
 end

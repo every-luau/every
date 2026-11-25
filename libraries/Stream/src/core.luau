@@ -1,6 +1,5 @@
--- The two classes, Stream and LifeStream, their constructors and the methods
--- that subscribe. The other modules add their methods to `methods` and
--- `life_methods`.
+-- The Stream class, its constructor and the methods that subscribe. The other
+-- modules add their methods to `methods`.
 --
 -- Each subscription runs the producer with its own Void, and ending the
 -- subscription cleans it. Operators subscribe with `subscribe`, which hands
@@ -13,20 +12,14 @@ const Void = require(script.Parent.Parent.Void)
 const stream_types = require("./types")
 
 type Stream<T> = stream_types.Stream<T>
-type LifeStream<T> = stream_types.LifeStream<T>
 type Connection = Connection.Connection
 type Void = Void.Void
 
 -- the producer of a Stream, called once per subscription
 export type Producer<T> = (emit: (T) -> (), void: Void) -> ()
--- the producer of a LifeStream
-export type LifeProducer<T> = (emit: (T, boolean) -> (), void: Void) -> ()
 
 const methods: any = {}
 methods.__index = methods
-
-const life_methods: any = {}
-life_methods.__index = life_methods
 
 --[=[
 	@within Stream
@@ -50,34 +43,6 @@ end
 
 --[=[
 	@within Stream
-	@function life
-	@param producer (emit: (item: T, alive: boolean) -> (), void: Void) -> ()
-	@return LifeStream<T>
-
-	creates a [LifeStream]. `producer` emits `(item, true)` when an item joins
-	the set and `(item, false)` when it leaves, and adds to the [Void] whatever
-	it starts
-
-	```lua
-	local friends = Stream.life(function(emit, void)
-		for _, friend in get_friends() do
-			emit(friend, true)
-		end
-		void:add(friend_added:Connect(function(friend)
-			emit(friend, true)
-		end))
-		void:add(friend_removed:Connect(function(friend)
-			emit(friend, false)
-		end))
-	end)
-	```
-]=]
-const function new_life<T>(producer: LifeProducer<T>): LifeStream<T>
-	return setmetatable({ _producer = producer, _connections = Void.new() }, life_methods) :: any
-end
-
---[=[
-	@within Stream
 	@function is
 	@param value any
 	@return boolean
@@ -89,18 +54,6 @@ const function is(value: any): boolean
 	return type(value) == "table" and getmetatable(value) == methods
 end
 
---[=[
-	@within Stream
-	@function is_life
-	@param value any
-	@return boolean
-
-	returns whether `value` is a [LifeStream]
-]=]
-const function is_life(value: any): boolean
-	return type(value) == "table" and getmetatable(value) == life_methods
-end
-
 -- runs the producer of `stream` for `listener`, with `void` holding what it
 -- starts, and returns `void`
 const function run(stream: any, listener: (...any) -> (), void: Void): Void
@@ -108,7 +61,7 @@ const function run(stream: any, listener: (...any) -> (), void: Void): Void
 	return void
 end
 
--- subscribes `listener` to a stream or life stream without a Connection, for
+-- subscribes `listener` to a stream without a Connection, for
 -- operators. cleaning the Void it returns ends the subscription
 const function subscribe(stream: any, listener: (...any) -> ()): Void
 	return run(stream, listener, Void.new())
@@ -154,37 +107,6 @@ const function tidy(stream: any, on_value: (value: any, value_void: Void) -> ())
 	void:add(function()
 		source:clean()
 		value_void:clean()
-	end)
-	return void
-end
-
--- subscribes to the life stream `stream`, and gives `on_item` a Void for each
--- item, cleaned when it leaves or the subscription ends
-const function tidy_each(stream: any, on_item: (item: any, item_void: Void) -> ()): Void
-	const voids: { [any]: Void } = {}
-	const source = subscribe(stream, function(item: any, alive: boolean)
-		const previous = voids[item]
-		if previous then
-			voids[item] = nil
-			previous:clean()
-		end
-		if alive then
-			const item_void = Void.new()
-			voids[item] = item_void
-			on_item(item, item_void)
-		end
-	end)
-
-	const void = Void.new()
-	void:add(function()
-		-- cleaning an item can make the stream emit, so each one is taken out first
-		local item, item_void = next(voids)
-		while item ~= nil do
-			voids[item] = nil
-			item_void:clean()
-			item, item_void = next(voids)
-		end
-		source:clean()
 	end)
 	return void
 end
@@ -345,123 +267,12 @@ function methods.destroy<T>(self: Stream<T>)
 	(self :: any)._connections:clean()
 end
 
---[=[
-	@class LifeStream
-
-	a LifeStream follows a set of things that come and go, like the players in
-	the game or the parts with a tag. it emits `(item, true)` when an item joins
-	and `(item, false)` when it leaves, and [LifeStream:each] runs something for
-	each item while it is there. make one with [Stream.players],
-	[Stream.children], [Stream.tagged] or [Stream.life]
-
-	```lua
-	Stream.tagged("Lava"):each(function(part, void)
-		void:add(part.Touched:Connect(kill))
-	end)
-	```
-]=]
-
---[=[
-	@within LifeStream
-	@method listen
-	@param listener (item: T, alive: boolean) -> ()
-	@return Connection
-
-	subscribes `listener`, called with `(item, true)` for every item there now
-	and joining later, and `(item, false)` when one leaves. disconnecting emits
-	nothing, use [LifeStream:each] to undo things per item
-]=]
-function life_methods.listen<T>(self: LifeStream<T>, listener: (item: T, alive: boolean) -> ()): Connection
-	return track(self, open(self, listener))
-end
-
---[=[
-	@within LifeStream
-	@method each
-	@param callback (item: T, void: Void) -> ()
-	@param predicate ((item: T) -> boolean)?
-	@return Connection
-
-	calls `callback` once for every item that `predicate` accepts, there now or
-	joining later, with a [Void] cleaned when the item leaves or the [Connection]
-	is disconnected. `callback` runs on its own thread with [Thread], so it can
-	yield
-
-	```lua
-	Stream.players():each(function(player, void)
-		local leaderstats = void:add(Instance.new("Folder"))
-		leaderstats.Name = "leaderstats"
-		leaderstats.Parent = player
-	end)
-	```
-]=]
-function life_methods.each<T>(
-	self: LifeStream<T>,
-	callback: (item: T, void: Void) -> (),
-	predicate: ((item: T) -> boolean)?
-): Connection
-	const voids: { [T]: Void } = {}
-	const source = open(self, function(item: T, alive: boolean)
-		if alive then
-			if voids[item] or (predicate and not predicate(item)) then
-				return
-			end
-			const item_void = Void.new()
-			voids[item] = item_void
-			Thread(callback, item, item_void)
-		else
-			const item_void = voids[item]
-			if item_void then
-				voids[item] = nil
-				item_void:clean()
-			end
-		end
-	end)
-
-	const void = Void.new()
-	void:add(function()
-		source:clean()
-		for item, item_void in voids do
-			voids[item] = nil
-			item_void:clean()
-		end
-	end)
-	return track(self, void)
-end
-
---[=[
-	@within LifeStream
-	@method use
-	@param operator (stream: LifeStream<T>) -> U
-	@return U
-
-	returns `operator(self)`, so your own operators chain like the built-in ones
-]=]
-function life_methods.use<T>(self: LifeStream<T>, operator: (stream: LifeStream<T>) -> any): any
-	return operator(self)
-end
-
---[=[
-	@within LifeStream
-	@method destroy
-
-	disconnects every [Connection] that [LifeStream:listen] and
-	[LifeStream:each] gave for this life stream. it still works afterwards
-]=]
-function life_methods.destroy<T>(self: LifeStream<T>)
-	(self :: any)._connections:clean()
-end
-
 return {
 	methods = methods,
-	life_methods = life_methods,
 	new = new,
-	new_life = new_life,
 	is = is,
-	is_life = is_life,
 	run = run,
 	subscribe = subscribe,
 	until_finished = until_finished,
 	tidy = tidy,
-	tidy_each = tidy_each,
 }

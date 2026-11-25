@@ -1,5 +1,6 @@
 const Observable = require(script.Parent.Parent.Observable)
-const Stream = require(script.Parent.Parent.Stream)
+
+const signals = require("./signals")
 
 --[=[
 	@within Observe
@@ -23,5 +24,7 @@ const Stream = require(script.Parent.Parent.Stream)
 	```
 ]=]
 return function(root: Instance): Observable.Observable<Instance>
-	return Observable.new(Stream.descendants(root))
+	return signals(function()
+		return root:GetDescendants()
+	end, root.DescendantAdded, root.DescendantRemoving)
 end
