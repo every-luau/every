@@ -33,6 +33,8 @@
 	untyped stream since Luau can't type them yet. annotate the result to get
 	the types back: `local name: Stream<string> = stream:map(get_name)`
 	:::
+
+	Credits: [Serokai](https://github.com/serokai)
 ]=]
 
 const core = require("@self/core")
@@ -57,7 +59,6 @@ return table.freeze({
 	life = core.new_life,
 	is = core.is,
 	is_life = core.is_life,
-
 	of = sources.of,
 	never = sources.never,
 	from = sources.from,
@@ -70,7 +71,6 @@ return table.freeze({
 	combine_table = sources.combine_table,
 	state = sources.state,
 	subject = sources.subject,
-
 	character = instances.character,
 	child = instances.child,
 	descendant = instances.descendant,
