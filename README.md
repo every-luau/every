@@ -6,13 +6,16 @@ Documentation: https://every-luau.github.io
 
 | Library | |
 | --- | --- |
+| [AlphaTween](libraries/AlphaTween) | AlphaTween plays a tween that hands an eased alpha to a callback, to animate anything. |
 | [Atom](libraries/Atom) | Atom is a value that can be observed, derived and updated. |
 | [BetterScale](libraries/BetterScale) | BetterScale scales a UIScale with the size of its gui, configured with attributes. |
 | [Brio](libraries/Brio) | Brio holds a value while it is alive, and cleans what was made for it once it dies. |
 | [Caffeine](libraries/Caffeine) | Caffeine keeps unanchored parts from falling asleep in Roblox physics. |
 | [Cieluv](libraries/Cieluv) | Cieluv converts Color3 to and from CIELUV, and blends colors through it. |
+| [Clock](libraries/Clock) | Clock is a time that moves at a speed, the same on the server and every client. |
 | [Connection](libraries/Connection) | Connection is like Roblox's RBXScriptConnection, but for your own code. |
 | [Future](libraries/Future) | Future is a value available later, with chaining, combinators and cancellation. |
+| [Kernel](libraries/Kernel) | Kernel adds roles, commands and a log on top of the Konsole command console. |
 | [Lifecycle](libraries/Lifecycle) | Lifecycle builds objects whose lifecycle hooks are registered with chainable calls. |
 | [Loop](libraries/Loop) | Loop calls a callback every few seconds, driven by Heartbeat. |
 | [Mount](libraries/Mount) | Mount builds instances out of props, where any property can be a stream. |
@@ -21,6 +24,7 @@ Documentation: https://every-luau.github.io
 | [Ratelimit](libraries/Ratelimit) | Ratelimit limits how many times something can happen per key within an interval. |
 | [Region](libraries/Region) | Region is a box that reports what enters and leaves it, every frame, without physics queries. |
 | [Retryer](libraries/Retryer) | Retryer calls a function again until it stops erroring, with different waits. |
+| [Schema](libraries/Schema) | Schema describes the shape of a value once, to check it, repair it, and turn it into bytes with Lync. |
 | [Signal](libraries/Signal) | Signal is a yield-safe signal whose handlers run on a recycled thread. |
 | [Stream](libraries/Stream) | Stream follows values over time and builds reactive code out of them. |
 | [Thread](libraries/Thread) | Thread runs callbacks on a recycled thread instead of creating a new one per call. |

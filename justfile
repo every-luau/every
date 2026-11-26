@@ -38,9 +38,10 @@ test-all:
 docs lib:
     {{script}} run {{lib}} npx --yes @metricsrb/fumablox@1 check
 
-# Generate every library's docs and run the site locally (the site repo is cloned next to libraries/)
+# Generate every library's docs and run the site locally (the site repo is cloned next to libraries/).
+# The gh token keeps the generator above the 60 GitHub API calls an hour it gets without one.
 site:
-    cd *.github.io; npm run generate -- ../libraries; npm run dev
+    cd *.github.io; if (Get-Command gh -ErrorAction SilentlyContinue) { $env:GH_TOKEN = gh auth token }; npm run generate -- ../libraries; npm run dev
 
 # Show what ember would publish, without uploading
 dry-run lib:
