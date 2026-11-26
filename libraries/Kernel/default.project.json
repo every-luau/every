@@ -1,0 +1,6 @@
+{
+  "name": "Kernel",
+  "tree": {
+    "$path": "src"
+  }
+}

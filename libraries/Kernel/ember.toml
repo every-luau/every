@@ -1,0 +1,27 @@
+[package]
+name = "every/kernel"
+version = "0.0.1"
+description = "Kernel adds roles, commands and a log on top of the Konsole command console."
+authors = []
+repository = "every-luau/every"
+license = "MIT"
+
+[target]
+environment = "shared"
+main = "src/init.luau"
+includes = ["src", "default.project.json", "README.md", "LICENSE"]
+
+[indices]
+wally = "https://github.com/UpliftGames/wally-index"
+
+[dependencies]
+Konsole = { name = "kyrorblx/konsole", version = "^0.1.11", index = "wally" }
+Ratelimit = { name = "every/ratelimit", version = "^0.0.1" }
+Signal = { name = "every/signal", version = "^0.0.1" }
+
+[tools]
+lest = "lest-luau/lest@0.6.0"
+rojo = "rojo-rbx/rojo@7.7.0"
+
+[scripts]
+test = "lest"

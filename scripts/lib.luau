@@ -196,10 +196,12 @@ local function moduleNode(name: string, path: string): SourcemapNode?
 		return { name = name, className = "ModuleScript", filePaths = { path } }
 	end
 
-	local init = `{path}/init.luau`
-	if not fs.isFile(init) then
+	if not fs.isDir(path) then
 		return nil
 	end
+
+	local init = `{path}/init.luau`
+	local hasInit = fs.isFile(init)
 
 	local children = {}
 	for _, child in fs.readDir(path) do
@@ -214,6 +216,14 @@ local function moduleNode(name: string, path: string): SourcemapNode?
 	table.sort(children, function(a: SourcemapNode, b: SourcemapNode)
 		return a.name < b.name
 	end)
+
+	-- a folder without init.luau, like the api or kernel folder of a package
+	if not hasInit then
+		if #children == 0 then
+			return nil
+		end
+		return { name = name, className = "Folder", children = children }
+	end
 
 	-- serde writes an empty table as `{}`, which isn't a valid children array
 	return { name = name, className = "ModuleScript", filePaths = { init }, children = if #children > 0 then children else nil }

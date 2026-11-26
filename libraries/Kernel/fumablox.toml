@@ -1,0 +1,10 @@
+title = "Kernel"
+description = "Kernel adds roles, commands and a log on top of the Konsole command console."
+gitRepoUrl = "https://github.com/every-luau/every"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true
