@@ -1,0 +1,25 @@
+[package]
+name = "every/schema"
+version = "0.0.1"
+description = "Schema describes the shape of a value once, to check it, repair it, and turn it into bytes with Lync."
+authors = []
+repository = "every-luau/every"
+license = "MIT"
+
+[target]
+environment = "shared"
+main = "src/init.luau"
+includes = ["src", "default.project.json", "README.md", "LICENSE"]
+
+[indices]
+wally = "https://github.com/UpliftGames/wally-index"
+
+[dependencies]
+Lync = { name = "axp3cter/lync", version = "^4.0.3", index = "wally" }
+
+[tools]
+lest = "lest-luau/lest@0.6.0"
+rojo = "rojo-rbx/rojo@7.7.0"
+
+[scripts]
+test = "lest"

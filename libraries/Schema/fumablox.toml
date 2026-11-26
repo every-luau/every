@@ -1,0 +1,10 @@
+title = "Schema"
+description = "Schema describes the shape of a value once, to check it, repair it, and turn it into bytes with Lync."
+gitRepoUrl = "https://github.com/every-luau/every"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true
