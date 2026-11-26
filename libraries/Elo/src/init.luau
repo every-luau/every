@@ -16,7 +16,7 @@
 	alice, bob = Elo.rate(config, alice, bob, Elo.WIN)
 	print(alice, bob) --> 1018.2, 1181.8
 
-	print(Elo.expected(config, alice, bob)) --> 0.28, the chance alice wins
+	print(Elo.expected_score(config, alice, bob)) --> 0.28, the chance alice wins
 	```
 
 	:::info
@@ -63,20 +63,20 @@ const SQRT2 = math.sqrt(2)
 export type K = number | (rating: number) -> number
 
 export type Config = {
-	set_k: (self: Config, k: K) -> Config,
-	set_factor: (self: Config, factor: number) -> Config,
+	set_k: (self: Config, k_factor: K) -> Config,
+	set_scale: (self: Config, scale: number) -> Config,
 	set_initial: (self: Config, initial: number) -> Config,
 	set_floor: (self: Config, floor: number) -> Config,
-	set_group: (self: Config, group: boolean) -> Config,
+	set_series: (self: Config, series: boolean) -> Config,
 	get_initial: (self: Config) -> number,
 }
 
 type Fields = {
 	_k: K,
-	_factor: number,
+	_scale: number,
 	_initial: number,
 	_floor: number,
-	_group: boolean,
+	_series: boolean,
 }
 
 const Config = {}
@@ -110,10 +110,10 @@ end
 	| setting | default | method |
 	| --- | --- | --- |
 	| K | [Elo.fide] | `set_k` |
-	| factor | 400 | `set_factor` |
+	| scale | 400 | `set_scale` |
 	| initial rating | 1400 | `set_initial` |
 	| lowest rating | 100 | `set_floor` |
-	| series as one match | false | `set_group` |
+	| series as one match | false | `set_series` |
 
 	```lua
 	local config = Elo.new():set_k(20):set_floor(0)
@@ -122,10 +122,10 @@ end
 const function new(): Config
 	const fields: Fields = {
 		_k = fide,
-		_factor = 400,
+		_scale = 400,
 		_initial = 1400,
 		_floor = 100,
-		_group = false,
+		_series = false,
 	}
 	return setmetatable(fields, Config) :: any
 end
@@ -163,17 +163,17 @@ end
 
 --[=[
 	@within Elo
-	@method set_factor
-	@param factor number
+	@method set_scale
+	@param scale number
 	@return Config
 
 	sets the rating gap at which the stronger player is 10 times more likely
 	to win
 ]=]
-function Config.set_factor(self: Config, factor: number): Config
-	assert(type(factor) == "number" and factor > 0, "[Elo] set_factor needs a number above 0")
+function Config.set_scale(self: Config, scale: number): Config
+	assert(type(scale) == "number" and scale > 0, "[Elo] set_scale needs a number above 0")
 	const fields: any = self
-	fields._factor = factor
+	fields._scale = scale
 	return self
 end
 
@@ -209,17 +209,17 @@ end
 
 --[=[
 	@within Elo
-	@method set_group
-	@param group boolean
+	@method set_series
+	@param series boolean
 	@return Config
 
 	whether [Elo.rate] counts a series as one match, won by whoever won more
 	games and worth as many matches as they won. otherwise each game counts
 ]=]
-function Config.set_group(self: Config, group: boolean): Config
-	assert(type(group) == "boolean", "[Elo] set_group needs a boolean")
+function Config.set_series(self: Config, series: boolean): Config
+	assert(type(series) == "boolean", "[Elo] set_series needs a boolean")
 	const fields: any = self
-	fields._group = group
+	fields._series = series
 	return self
 end
 
@@ -241,7 +241,7 @@ end
 
 --[=[
 	@within Elo
-	@function expected
+	@function expected_score
 	@param config Config
 	@param rating_a number -- the rating of the first player
 	@param rating_b number -- the rating of the second player
@@ -251,13 +251,13 @@ end
 	to 1: their chance of winning plus half their chance of a draw
 
 	```lua
-	Elo.expected(Elo.new(), 1400, 1400) --> 0.5
-	Elo.expected(Elo.new(), 1800, 1400) --> 0.91
+	Elo.expected_score(Elo.new(), 1400, 1400) --> 0.5
+	Elo.expected_score(Elo.new(), 1800, 1400) --> 0.91
 	```
 ]=]
-const function expected(config: Config, rating_a: number, rating_b: number): number
+const function expected_score(config: Config, rating_a: number, rating_b: number): number
 	check(config, rating_a, rating_b)
-	return 1 / (1 + 10 ^ ((rating_b - rating_a) / (config :: any)._factor))
+	return 1 / (1 + 10 ^ ((rating_b - rating_a) / (config :: any)._scale))
 end
 
 -- the K of `config` for `rating`
@@ -276,10 +276,10 @@ const function surprise(config: any, results: number | { number }, expectation: 
 		return results - expectation
 	end
 
-	if config._group then
+	if config._series then
 		local wins, losses = 0, 0
 		for _, score in results do
-			assert(type(score) == "number" and score >= 0 and score <= 1, "[Elo] rating_a result is rating_a score from 0 to 1")
+			assert(type(score) == "number" and score >= 0 and score <= 1, "[Elo] a result is a score from 0 to 1")
 			if score == WIN then
 				wins += 1
 			elseif score == LOSS then
@@ -292,7 +292,7 @@ const function surprise(config: any, results: number | { number }, expectation: 
 
 	local total = 0
 	for _, score in results do
-		assert(type(score) == "number" and score >= 0 and score <= 1, "[Elo] rating_a result is rating_a score from 0 to 1")
+		assert(type(score) == "number" and score >= 0 and score <= 1, "[Elo] a result is a score from 0 to 1")
 		total += score - expectation
 	end
 	return total
@@ -320,7 +320,7 @@ end
 	```
 ]=]
 const function rate(config: Config, rating_a: number, rating_b: number, results: number | { number }): (number, number)
-	const chance = expected(config, rating_a, rating_b)
+	const chance = expected_score(config, rating_a, rating_b)
 	const gap = surprise(config, results, chance)
 	const fields = config :: any
 	const new_rating_a = math.max(fields._floor, rating_a + k_of(fields, rating_a) * gap)
@@ -330,7 +330,7 @@ end
 
 --[=[
 	@within Elo
-	@function change
+	@function delta
 	@param config Config
 	@param rating_a number -- the rating of the first player
 	@param rating_b number -- the rating of the second player
@@ -342,10 +342,10 @@ end
 	show them before or after a match
 
 	```lua
-	local win = Elo.change(Elo.new(), 1400, 1800, Elo.WIN) --> 29.1
+	local win = Elo.delta(Elo.new(), 1400, 1800, Elo.WIN) --> 29.1
 	```
 ]=]
-const function change(config: Config, rating_a: number, rating_b: number, results: number | { number }): (number, number)
+const function delta(config: Config, rating_a: number, rating_b: number, results: number | { number }): (number, number)
 	const new_rating_a, new_rating_b = rate(config, rating_a, rating_b, results)
 	return new_rating_a - rating_a, new_rating_b - rating_b
 end
@@ -396,7 +396,7 @@ end
 
 -- the spread of ratings around the initial one, as a normal law
 const function deviation(config: any): number
-	return config._factor / SQRT2
+	return config._scale / SQRT2
 end
 
 --[=[
@@ -422,22 +422,22 @@ end
 
 --[=[
 	@within Elo
-	@function rating_at
+	@function rating_at_percentile
 	@param config Config
 	@param share number -- above 0 and below 1
 	@return number
-	@error "rating_at needs a share above 0 and below 1" -- `share` is 0, 1 or outside
+	@error "rating_at_percentile needs a share above 0 and below 1" -- `share` is 0, 1 or outside
 
 	returns the rating that `share` of the players are below, the opposite of
 	[Elo.percentile]
 
 	```lua
-	local top_ten = Elo.rating_at(Elo.new(), 0.9) --> 1762.5
+	local top_ten = Elo.rating_at_percentile(Elo.new(), 0.9) --> 1762.5
 	```
 ]=]
-const function rating_at(config: Config, share: number): number
+const function rating_at_percentile(config: Config, share: number): number
 	assert(is(config), "[Elo] needs a config from Elo.new")
-	assert(type(share) == "number" and share > 0 and share < 1, "[Elo] rating_at needs a share above 0 and below 1")
+	assert(type(share) == "number" and share > 0 and share < 1, "[Elo] rating_at_percentile needs a share above 0 and below 1")
 	const fields = config :: any
 	return fields._initial + quantile(share) * deviation(fields)
 end
@@ -451,9 +451,9 @@ return table.freeze({
 	new = new,
 	is = is,
 	fide = fide,
-	expected = expected,
+	expected_score = expected_score,
 	rate = rate,
-	change = change,
+	delta = delta,
 	percentile = percentile,
-	rating_at = rating_at,
+	rating_at_percentile = rating_at_percentile,
 })

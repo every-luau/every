@@ -22,8 +22,8 @@ end
 
 -- What a win would bring, shown before the duel.
 local function preview(player: Player, opponent: Player)
-	local reward = Elo.change(config, rating(player), rating(opponent), Elo.WIN)
-	local chance = Elo.expected(config, rating(player), rating(opponent))
+	local reward = Elo.delta(config, rating(player), rating(opponent), Elo.WIN)
+	local chance = Elo.expected_score(config, rating(player), rating(opponent))
 	print(`{math.round(chance * 100)}% to win, +{math.round(reward)} if you do`)
 end
 

@@ -2,7 +2,7 @@
 
 Elo rates players from the matches they play against each other
 
-build a config with `Elo.new` and its `set_` methods, then pass it to `Elo.rate` after each match. the winner takes points from the loser, more of them when the loser was rated higher. `Elo.percentile` and `Elo.rating_at` turn a rating into a rank and back
+build a config with `Elo.new` and its `set_` methods, then pass it to `Elo.rate` after each match. the winner takes points from the loser, more of them when the loser was rated higher. `Elo.percentile` and `Elo.rating_at_percentile` turn a rating into a rank and back
 
 **[Documentation](https://every-luau.github.io/docs/elo)**
 
@@ -32,10 +32,10 @@ print(alice, bob) --> 1018.2, 1181.8
 alice, bob = Elo.rate(config, alice, bob, { Elo.WIN, Elo.DRAW, Elo.LOSS })
 
 -- what a win would bring, before the match
-local reward = Elo.change(config, alice, bob, Elo.WIN)
+local reward = Elo.delta(config, alice, bob, Elo.WIN)
 
 -- the share of players below, and the rating of the top 10%
-print(Elo.percentile(config, alice), Elo.rating_at(config, 0.9))
+print(Elo.percentile(config, alice), Elo.rating_at_percentile(config, 0.9))
 ```
 
 ## Credits
