@@ -1,5 +1,5 @@
 title = "AlphaTween"
-description = ""
+description = "AlphaTween plays a tween that hands an eased alpha to a callback, to animate anything."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
