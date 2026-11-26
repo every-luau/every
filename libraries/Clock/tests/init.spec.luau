@@ -382,9 +382,9 @@ describe("Clock", function()
 		expect(clock:atom()).toBe(atom)
 		expect(atom:get()).toBe(0)
 
-		local seconds = atom:map(math.floor)
+		local seconds = atom:map(math.floor):changed()
 		local seen: { number } = {}
-		seconds:observe(function(value)
+		seconds:listen(function(value)
 			table.insert(seen, value)
 		end)
 

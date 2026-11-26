@@ -1,5 +1,5 @@
 title = "Atom"
-description = "Atom is a value that can be observed, derived and updated."
+description = "Atom is a value you set and follow like a stream."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

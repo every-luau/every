@@ -1,5 +1,5 @@
-title = "EasyGradient"
-description = ""
+title = "Gradient"
+description = "Gradient animates UIGradients, with ready presets for text, frames and strokes."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 

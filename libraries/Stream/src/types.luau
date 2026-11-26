@@ -54,26 +54,4 @@ export type Stream<T> = {
 	descendant: (self: Stream<T>, name: string, class_name: string?) -> any,
 }
 
---[=[
-	@within Stream
-	@type State<T> Stream<T> & { get: (self) -> T, set: (self, T) -> (), update: (self, (T) -> T) -> () }
-
-	a stream holding a value, see [Stream.state]
-]=]
-export type State<T> = Stream<T> & {
-	get: (self: State<T>) -> T,
-	set: (self: State<T>, value: T) -> (),
-	update: (self: State<T>, transform: (value: T) -> T) -> (),
-}
-
---[=[
-	@within Stream
-	@type Subject<T> Stream<T> & { fire: (self, T) -> () }
-
-	a stream fired from outside, see [Stream.subject]
-]=]
-export type Subject<T> = Stream<T> & {
-	fire: (self: Subject<T>, value: T) -> (),
-}
-
 return nil

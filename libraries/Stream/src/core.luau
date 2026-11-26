@@ -47,8 +47,7 @@ end
 	@param value any
 	@return boolean
 
-	returns whether `value` is a stream, [Stream.state] and [Stream.subject]
-	included
+	returns whether `value` is a stream, an [Atom] included
 ]=]
 const function is(value: any): boolean
 	return type(value) == "table" and getmetatable(value) == methods

@@ -4,6 +4,7 @@ local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
 local roblox = require("./roblox")
 local Observable = require("../src")
+local Atom = require("../../Atom/src")
 local Stream = require("../../Stream/src")
 
 -- subscribes to `observable`, recording "+item" when a brio comes and
@@ -83,7 +84,7 @@ describe("Observable", function()
 	end)
 
 	it("gives the latest value of a stream, nil giving nothing", function()
-		local state = Stream.state("a" :: string?)
+		local state = Atom.new("a" :: string?)
 		local events, connection = journal(Observable.from_stream(state))
 		state:set("b")
 		state:set(nil)
@@ -141,7 +142,7 @@ describe("Observable", function()
 	end)
 
 	it("still replaces the value before when a stream's value is filtered out", function()
-		local state = Stream.state(1)
+		local state = Atom.new(1)
 		local events = journal(Observable.from_stream(state):filter(function(value)
 			return value ~= 2
 		end))
@@ -166,7 +167,7 @@ describe("Observable", function()
 
 	it("follows an observable per item with flat_map", function()
 		local outer, add, remove = set()
-		local inners = { x = Stream.state("x1"), y = Stream.state("y1") }
+		local inners = { x = Atom.new("x1"), y = Atom.new("y1") }
 		local events = journal(outer:flat_map(function(item)
 			return Observable.from_stream(inners[item])
 		end))

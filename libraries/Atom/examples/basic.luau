@@ -14,11 +14,11 @@ coins:increment(10)
 coins:decrement(50, 0) -- stops at 0
 coins:set(0) -- the same value, so nothing is notified
 
--- A derived atom follows its source and is destroyed with it.
+-- An atom is a stream: listening emits the value, then every change.
 local label = coins:map(function(value)
 	return `{value} coins`
 end)
-print(label:get()) --> 0 coins
+label:listen(print) --> 0 coins
 
 -- Tables are compared deeply, and `get` returns a copy.
 local inventory = Atom.new({ sword = 1 })
@@ -33,4 +33,5 @@ Atom.batch({ coins, inventory }, function()
 	inventory:reset()
 end)
 
+-- Stops every listener, the label included.
 coins:destroy()

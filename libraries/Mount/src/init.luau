@@ -11,10 +11,10 @@
 	goes away once its [Connection] is disconnected
 
 	```lua
+	local Atom = require(path.to.Atom)
 	local Mount = require(path.to.Mount)
-	local Stream = require(path.to.Stream)
 
-	local count = Stream.state(0)
+	local count = Atom.new(0)
 
 	local connection = Mount(Instance.new("TextButton"), {
 		Size = UDim2.fromOffset(200, 50),
@@ -22,8 +22,8 @@
 			return `clicked {count} times`
 		end),
 		Activated = function()
-			count:update(function(n)
-				return n + 1
+			count:update(function(clicks)
+				return clicks + 1
 			end)
 		end,
 		Parent = screen_gui,
@@ -46,8 +46,8 @@ const function is_instance_of(value: any, class_name: string): boolean
 	return typeof(value) == "Instance" and (value :: Instance):IsA(class_name)
 end
 
--- what calling a handler key's value does: a function as is, a ValueBase or a
--- State is set
+-- what calling a handler key's value does: a function as is, a ValueBase or an
+-- Atom is set
 const function to_handler(target: any, what: string): (...any) -> ...any
 	if type(target) == "function" then
 		return target
@@ -60,7 +60,7 @@ const function to_handler(target: any, what: string): (...any) -> ...any
 			(target :: any):set(value)
 		end
 	end
-	error(`[Mount] {what} needs a function, a ValueBase or a state, got a {typeof(target)}`, 4)
+	error(`[Mount] {what} needs a function, a ValueBase or an Atom, got a {typeof(target)}`, 4)
 end
 
 -- whether `value` changes over time, so a property is set to each value
@@ -173,8 +173,8 @@ end
 
 	- a property name sets it to the value, or to every value of a stream or a
 	  ValueBase
-	- an event name connects the value to it: a function, a ValueBase or a
-	  `Stream.state` to set
+	- an event name connects the value to it: a function, a ValueBase or an
+	  [Atom] to set
 	- a number parents the value under `instance`: an instance, a stream of
 	  instances, or a table of props applied to `instance` too
 	- `Parent` is set last, once everything else is in place. it can be an
@@ -190,7 +190,7 @@ end
 	disconnected
 
 	```lua
-	local hovered = Stream.state(false)
+	local hovered = Atom.new(false)
 	local connection = Mount(frame, {
 		BackgroundColor3 = hovered:map(function(is_hovered)
 			return if is_hovered then BLUE else GRAY

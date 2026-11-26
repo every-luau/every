@@ -7,8 +7,6 @@ const stream_types = require("./types")
 
 type Void = Void.Void
 type Stream<T> = stream_types.Stream<T>
-type State<T> = stream_types.State<T>
-type Subject<T> = stream_types.Subject<T>
 type SignalLike = stream_types.SignalLike
 
 const new = core.new
@@ -306,113 +304,6 @@ const function combine_table<K>(streams: { [K]: Stream<any> }, borrow: boolean?)
 	end)
 end
 
--- the listeners of a state or subject, one entry per subscription so the same
--- function subscribed twice is called twice and unsubscribed separately
-type Listeners<T> = { [{ (T) -> () }]: true }
-
-const function listen_to<T>(listeners: Listeners<T>, listener: (T) -> (), void: Void)
-	const subscription = { listener }
-	listeners[subscription] = true
-	void:add(function()
-		listeners[subscription] = nil
-	end)
-end
-
-const function broadcast<T>(listeners: Listeners<T>, value: T)
-	-- listeners added while broadcasting wait for the next one, and removed ones
-	-- are skipped
-	for subscription in table.clone(listeners) do
-		if listeners[subscription] then
-			subscription[1](value)
-		end
-	end
-end
-
---[=[
-	@within Stream
-	@function state
-	@param initial T
-	@return State<T>
-
-	creates a stream holding a value. subscribing emits it right away, and
-	`state:set(new)` emits the new one when it is not `==` to the current one.
-	`state:get()` reads it, and `state:update(transform)` sets it to
-	`transform(current)`. `state:destroy()` stops every listener, streams made
-	from it included
-
-	```lua
-	local count = Stream.state(0)
-	count:listen(print) --> 0
-	count:update(function(n)
-		return n + 1
-	end) --> 1
-	```
-]=]
-const function state<T>(initial: T): State<T>
-	local current = initial
-	const listeners: Listeners<T> = {}
-
-	const self: any = new(function(emit: (T) -> (), void: Void)
-		listen_to(listeners, emit, void)
-		emit(current)
-	end)
-
-	function self.get(_): T
-		return current
-	end
-	function self.set(_, value: T)
-		if value ~= current then
-			current = value
-			broadcast(listeners, value)
-		end
-	end
-	function self.update(this: any, transform: (T) -> T)
-		this:set(transform(current))
-	end
-	function self.destroy(this: any)
-		-- streams made from it stop getting values too
-		table.clear(listeners)
-		this._connections:clean()
-	end
-
-	return self
-end
-
---[=[
-	@within Stream
-	@function subject
-	@return Subject<T>
-
-	creates a stream you fire from outside with `subject:fire(value)`, which
-	every current listener gets. listeners only get what is fired after they
-	subscribe, use [Stream.state] to get the current value too.
-	`subject:destroy()` stops every listener, streams made from it included
-
-	```lua
-	local clicked = Stream.subject()
-	clicked:listen(print)
-	clicked:fire("hello") --> hello
-	```
-]=]
-const function subject<T>(): Subject<T>
-	const listeners: Listeners<T> = {}
-
-	const self: any = new(function(emit: (T) -> (), void: Void)
-		listen_to(listeners, emit, void)
-	end)
-
-	function self.fire(_, value: T)
-		broadcast(listeners, value)
-	end
-	function self.destroy(this: any)
-		-- streams made from it stop getting values too
-		table.clear(listeners)
-		this._connections:clean()
-	end
-
-	return self
-end
-
 return {
 	of = of,
 	never = never,
@@ -424,6 +315,4 @@ return {
 	race = race,
 	combine = combine,
 	combine_table = combine_table,
-	state = state,
-	subject = subject,
 }

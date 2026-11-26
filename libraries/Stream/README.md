@@ -2,7 +2,7 @@
 
 Stream follows values over time and builds reactive code out of them
 
-chain methods like `map`, `filter` or `switch` to make new streams, then `listen` or `each` to use the values. to follow sets of things that come and go, like players or tagged parts, use [Observable](https://every-luau.github.io/docs/observable). to build UI out of streams, use [Mount](https://every-luau.github.io/docs/mount)
+chain methods like `map`, `filter` or `switch` to make new streams, then `listen` or `each` to use the values. to hold a value you set, use [Atom](https://every-luau.github.io/docs/atom), which is a stream too. to follow sets of things that come and go, like players or tagged parts, use [Observable](https://every-luau.github.io/docs/observable). to build UI out of streams, use [Mount](https://every-luau.github.io/docs/mount)
 
 **[Documentation](https://every-luau.github.io/docs/stream)**
 

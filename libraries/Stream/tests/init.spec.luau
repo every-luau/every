@@ -16,6 +16,42 @@ local function recorder()
 	return record
 end
 
+-- a stream the test drives by hand: `fire` emits to every listener. given a
+-- value, it holds it too: listening emits the current one, and `set` emits a
+-- new one when it is not `==` to the current one
+local function manual(...: any): any
+	local holds = select("#", ...) > 0
+	local current = ...
+	local listeners: { [{ (any) -> () }]: true } = {}
+
+	local stream: any = Stream.new(function(emit, void)
+		local subscription = { emit }
+		listeners[subscription] = true
+		void:add(function()
+			listeners[subscription] = nil
+		end)
+		if holds then
+			emit(current)
+		end
+	end)
+
+	function stream.fire(_, value: any)
+		for subscription in table.clone(listeners) do
+			if listeners[subscription] then
+				subscription[1](value)
+			end
+		end
+	end
+	function stream.set(this: any, value: any)
+		if value ~= current then
+			current = value
+			this:fire(value)
+		end
+	end
+
+	return stream
+end
+
 describe("making and listening to streams", function()
 	it("runs the producer per listener and cleans it on disconnect", function()
 		local log = {}
@@ -54,7 +90,7 @@ describe("making and listening to streams", function()
 	end)
 
 	it("emits nothing after being disconnected", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local record = recorder()
 		local connection = subject:listen(record.listener)
 		subject:fire(1)
@@ -65,7 +101,7 @@ describe("making and listening to streams", function()
 
 	it("tells streams apart", function()
 		expect(Stream.is(Stream.of(1))).toBe(true)
-		expect(Stream.is(Stream.state(1))).toBe(true)
+		expect(Stream.is(manual(1))).toBe(true)
 		expect(Stream.is(function() end)).toBe(false)
 	end)
 
@@ -81,7 +117,7 @@ describe("making and listening to streams", function()
 	end)
 
 	it("calls each with a void cleaned at the next value", function()
-		local state = Stream.state(1)
+		local state = manual(1)
 		local log = {}
 		local connection = state:each(function(value, void)
 			table.insert(log, `+{value}`)
@@ -98,9 +134,9 @@ describe("making and listening to streams", function()
 	end)
 
 	it("waits for the next value, or returns the current one", function()
-		expect(Stream.state("now"):wait()).toBe("now")
+		expect(manual("now"):wait()).toBe("now")
 
-		local subject = Stream.subject()
+		local subject = manual()
 		local result: any = nil
 		task.spawn(function()
 			result = subject:wait()
@@ -113,7 +149,7 @@ describe("making and listening to streams", function()
 	end)
 
 	it("disconnects every listener of a stream with destroy", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local listened, eached = recorder(), recorder()
 		local doubled = subject:map(function(n)
 			return n * 2
@@ -144,51 +180,6 @@ describe("making and listening to streams", function()
 			end)
 			:listen(record.listener)
 		expect(record.values).toEqual({ 20 })
-	end)
-end)
-
-describe("state and subject", function()
-	it("fires a subject to every listener, separately for the same function", function()
-		local subject = Stream.subject()
-		local record = recorder()
-		local first = subject:listen(record.listener)
-		subject:listen(record.listener)
-		subject:fire(1)
-		first:disconnect()
-		subject:fire(2)
-		expect(record.values).toEqual({ 1, 1, 2 })
-	end)
-
-	it("emits a state on listen and when it changes", function()
-		local state = Stream.state("a")
-		local record = recorder()
-		state:listen(record.listener)
-		state:set("a")
-		state:set("b")
-		state:update(function(value)
-			return value .. "c"
-		end)
-		expect(state:get()).toBe("bc")
-		expect(record.values).toEqual({ "a", "b", "bc" })
-	end)
-
-	it("stops every listener of a state or a subject with destroy, streams made from it included", function()
-		local state = Stream.state(1)
-		local subject = Stream.subject()
-		local record = recorder()
-		local connection = state:listen(record.listener)
-		state:map(function(n)
-			return n * 10
-		end):listen(record.listener)
-		subject:listen(record.listener)
-
-		state:destroy()
-		subject:destroy()
-		state:set(2)
-		subject:fire(3)
-		expect(record.values).toEqual({ 1, 10 })
-		expect(connection.connected).toBe(false)
-		expect(state:get()).toBe(2)
 	end)
 end)
 
@@ -226,8 +217,8 @@ describe("operators", function()
 	end)
 
 	it("switches to the latest inner stream", function()
-		local outer = Stream.state("a")
-		local inners = { a = Stream.subject(), b = Stream.subject() }
+		local outer = manual("a")
+		local inners = { a = manual(), b = manual() }
 		local record = recorder()
 		local connection = outer
 			:switch(function(key)
@@ -259,7 +250,7 @@ describe("operators", function()
 		Stream.of("a", "b", "c"):take(2):listen(taken.listener)
 		expect(taken.values).toEqual({ "a", "b" })
 
-		local subject = Stream.subject()
+		local subject = manual()
 		local once = recorder()
 		subject:take(1):listen(once.listener)
 		subject:fire(1)
@@ -300,7 +291,7 @@ describe("operators", function()
 		-- what end_with emits reaches the operators after it, not a listener
 		-- that already left
 		local reset = recorder()
-		Stream.state(true)
+		manual(true)
 			:end_with(false)
 			:tap(reset.listener)
 			:listen(function() end)
@@ -309,8 +300,8 @@ describe("operators", function()
 	end)
 
 	it("combines values with the latest of another stream", function()
-		local other = Stream.subject()
-		local main = Stream.subject()
+		local other = manual()
+		local main = manual()
 		local record = recorder()
 		main:with(other, function(value, latest)
 			return `{value}:{latest}`
@@ -323,7 +314,7 @@ describe("operators", function()
 	end)
 
 	it("buffers by count and flushes the rest when the subscription ends", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local record = recorder()
 		local connection = subject:buffer(2):tap(record.listener):listen(function() end)
 		subject:fire(1)
@@ -334,7 +325,7 @@ describe("operators", function()
 	end)
 
 	it("warns and keeps going when a listener after catch errors", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local count = 0
 		subject:catch("risky"):listen(function()
 			count += 1
@@ -363,7 +354,7 @@ describe("time", function()
 	end)
 
 	it("cleans the delayed stream's own subscription", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local seen = recorder()
 		local connection = subject:after(1):tap(seen.listener):listen(function() end)
 		roblox.advance(1)
@@ -374,7 +365,7 @@ describe("time", function()
 	end)
 
 	it("debounces to the last value once quiet", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local record = recorder()
 		subject:debounce(1):listen(record.listener)
 		subject:fire("a")
@@ -387,7 +378,7 @@ describe("time", function()
 	end)
 
 	it("throttles to the first value of each window", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local record = recorder()
 		subject:throttle(1):listen(record.listener)
 		subject:fire("a")
@@ -398,7 +389,7 @@ describe("time", function()
 	end)
 
 	it("buffers by time from the first value of a batch", function()
-		local subject = Stream.subject()
+		local subject = manual()
 		local record = recorder()
 		subject:buffer_time(1):listen(record.listener)
 		subject:fire(1)
@@ -453,14 +444,14 @@ describe("sources", function()
 		local record = recorder()
 		Stream.from(value):listen(record.listener)
 		Stream.from("plain"):listen(record.listener)
-		local state = Stream.state("state")
+		local state = manual("state")
 		expect(Stream.from(state)).toBe(state)
 		value.Value = 5
 		expect(record.values).toEqual({ 0, "plain", 5 })
 	end)
 
 	it("merges and races", function()
-		local a, b = Stream.subject(), Stream.subject()
+		local a, b = manual(), manual()
 		local merged, first = recorder(), recorder()
 		Stream.merge(a, b):listen(merged.listener)
 		Stream.race(a, b):listen(first.listener)
@@ -471,7 +462,7 @@ describe("sources", function()
 	end)
 
 	it("combines the latest values once all emitted, nil included", function()
-		local a, b = Stream.state(1), Stream.state(nil :: number?)
+		local a, b = manual(1), manual(nil :: number?)
 		local record = recorder()
 		Stream.combine(a, b, "c", function(x, y, z)
 			return `{x}:{y}:{z}`
@@ -480,7 +471,7 @@ describe("sources", function()
 		a:set(3)
 		expect(record.values).toEqual({ "1:nil:c", "1:2:c", "3:2:c" })
 
-		local waiting = Stream.subject()
+		local waiting = manual()
 		local count = 0
 		Stream.combine(waiting, a, function()
 			count += 1
@@ -491,7 +482,7 @@ describe("sources", function()
 	end)
 
 	it("combines a table of streams under the same keys", function()
-		local health = Stream.state(100)
+		local health = manual(100)
 		local record = recorder()
 		Stream.combine_table({ name = Stream.of("bob"), health = health }):listen(record.listener)
 		health:set(50)

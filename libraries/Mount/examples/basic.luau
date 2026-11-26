@@ -3,15 +3,15 @@
 
 local Players = game:GetService("Players")
 
+local Atom = require("../../Atom/src")
 local Mount = require("../src")
-local Stream = require("../../Stream/src")
 
 local screen = Instance.new("ScreenGui")
 screen.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- States hold values, and a property given a stream follows it.
-local clicks = Stream.state(0)
-local hovered = Stream.state(false)
+-- Atoms hold values and are streams, and a property given a stream follows it.
+local clicks = Atom.new(0)
+local hovered = Atom.new(false)
 
 -- Calling the module applies props to an instance you already have, and
 -- returns a Connection that undoes them.
@@ -24,7 +24,7 @@ local connection = Mount(Instance.new("TextButton"), {
 		return `clicked {count} times`
 	end),
 
-	-- events take a function, or a state or a ValueBase to set
+	-- events take a function, or an atom or a ValueBase to set
 	MouseEnter = function()
 		hovered:set(true)
 	end,

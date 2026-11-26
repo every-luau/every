@@ -276,8 +276,8 @@ end
 	value, and emits it after each update. `seed` itself isn't emitted
 
 	```lua
-	Stream.of(1, 2, 3):scan(function(sum, n)
-		return sum + n
+	Stream.of(1, 2, 3):scan(function(sum, value)
+		return sum + value
 	end, 0):listen(print) --> 1, 3, 6
 	```
 ]=]

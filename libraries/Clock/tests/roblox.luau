@@ -285,14 +285,16 @@ globals.typeof = function(value)
 	end
 	return builtin_typeof(value)
 end
-globals.script = {
-	Parent = setmetatable({}, {
-		-- Lync needs the engine, so it is the stand-in in `tests/lync.luau`
-		__index = function(_, name: string)
-			return if name == "Lync" then "../tests/lync" else `../../{name}/src`
-		end,
-	}),
-}
+-- `script.Parent.Parent` is the same, for the modules of Stream that Atom
+-- requires, which are one folder deeper
+local parent = setmetatable({}, {
+	-- Lync needs the engine, so it is the stand-in in `tests/lync.luau`
+	__index = function(_, name: string)
+		return if name == "Lync" then "../tests/lync" else `../../{name}/src`
+	end,
+}) :: any
+parent.Parent = parent
+globals.script = { Parent = parent }
 
 return {
 	advance = advance,

@@ -17,12 +17,11 @@ local connection = Stream.of(1, 2, 3, 4)
 	:listen(print) --> 20, 40
 connection:disconnect()
 
--- A state holds a value: listening emits it, and setting it emits again.
-local hovered = Stream.state(false)
-hovered:listen(function(is_hovered)
-	print("hovered", is_hovered)
+-- A signal becomes a stream of its fires. To hold a value you set, use Atom,
+-- which is a stream too.
+Stream.signal(workspace.ChildAdded):listen(function(child)
+	print("added", child)
 end)
-hovered:set(true)
 
 -- child and property follow "the current" instance: here the Health of each
 -- new character's Humanoid, dropping the old one when the character changes.

@@ -16,9 +16,10 @@
 	connection:disconnect()
 	```
 
-	to follow a set of things that come and go, like the players in the game
-	or the parts with a tag, use [Observable]. to build instances whose
-	properties are streams, use [Mount]
+	to hold a value you set, use [Atom], which is a stream too. to follow a
+	set of things that come and go, like the players in the game or the parts
+	with a tag, use [Observable]. to build instances whose properties are
+	streams, use [Mount]
 
 	:::info
 	methods that change the type of the values, like [Stream:map], return an
@@ -39,8 +40,6 @@ export type Connection = stream_types.Connection
 export type Void = stream_types.Void
 export type SignalLike = stream_types.SignalLike
 export type Stream<T> = stream_types.Stream<T>
-export type State<T> = stream_types.State<T>
-export type Subject<T> = stream_types.Subject<T>
 
 table.freeze(core.methods)
 
@@ -57,8 +56,6 @@ return table.freeze({
 	race = sources.race,
 	combine = sources.combine,
 	combine_table = sources.combine_table,
-	state = sources.state,
-	subject = sources.subject,
 	character = instances.character,
 	child = instances.child,
 	descendant = instances.descendant,

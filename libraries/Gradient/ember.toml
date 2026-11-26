@@ -1,7 +1,7 @@
 [package]
-name = "every/easy-gradient"
+name = "every/gradient"
 version = "0.0.1"
-description = ""
+description = "Gradient animates UIGradients, with ready presets for text, frames and strokes."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

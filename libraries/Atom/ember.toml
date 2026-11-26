@@ -1,7 +1,7 @@
 [package]
 name = "every/atom"
 version = "0.0.1"
-description = "Atom is a value that can be observed, derived and updated."
+description = "Atom is a value you set and follow like a stream."
 authors = []
 repository = "every-luau/every"
 license = "MIT"
@@ -12,10 +12,9 @@ main = "src/init.luau"
 includes = ["src", "default.project.json", "README.md", "LICENSE"]
 
 [dependencies]
-Signal = { name = "every/signal", version = "^0.0.1" }
+Connection = { name = "every/connection", version = "^0.0.1" }
+Stream = { name = "every/stream", version = "^0.0.1" }
 Thread = { name = "every/thread", version = "^0.0.1" }
-Void = { name = "every/void", version = "^0.0.1" }
-# Signal = { name = "every/signal", version = "^0.0.1" }
 
 [tools]
 lest = "lest-luau/lest@0.6.0"

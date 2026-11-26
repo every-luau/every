@@ -1,12 +1,16 @@
 --[=[
 	@class Atom
 
-	Atom is a value that can be observed, derived and updated
+	Atom is a value you set and follow like a stream
 
 	create one with a starting value, then change it with [Atom:set] or
 	[Atom:update] and listen with [Atom:observe]. it only notifies when the value
 	really changes: tables are compared deeply, so setting an equal table does
-	nothing
+	nothing. a table with a metatable is an object, compared by reference
+
+	an atom is a [Stream]: listening emits the value right away, then every
+	change. `map`, `filter`, `changed`, `Stream.combine`, [Mount] props and the
+	rest of Stream all work with it
 
 	```lua
 	local Atom = require(path.to.Atom)
@@ -18,6 +22,8 @@
 	end)
 
 	coins:increment(10)
+
+	-- a stream that follows coins
 	local doubled = coins:map(function(value)
 		return value * 2
 	end)
@@ -25,27 +31,20 @@
 
 	:::info
 	[Atom:get] returns a deep copy, so changing what it returns never changes the
-	atom. use [Atom:peek] to read the value itself without copying. derived atoms
-	from [Atom:map], [Atom:filter] and [Atom:throttle] are destroyed with the atom
-	they come from
+	atom, except for tables with a metatable, which are kept as is. listeners
+	and [Atom:peek] get the value itself without copying, so don't change it
 	:::
 ]=]
 
-const Signal = require(script.Parent.Signal)
+const Connection = require(script.Parent.Connection)
+const Stream = require(script.Parent.Stream)
 const Thread = require(script.Parent.Thread)
-const Void = require(script.Parent.Void)
 
-export type Connection = Signal.Connection
-export type Signal<T...> = Signal.Signal<T...>
+export type Connection = Connection.Connection
+export type Stream<T> = Stream.Stream<T>
+type Void = Stream.Void
 
-export type Atom<T> = setmetatable<{
-	_value: T,
-	_initial: T,
-	_frozen: boolean,
-	-- the value when the running Atom.batch started, while there is one
-	_batch: { old: T } | false,
-	_changed: Signal<T, T>,
-	_void: Void.Void,
+export type Atom<T> = Stream<T> & {
 	get: (self: Atom<T>) -> T,
 	peek: (self: Atom<T>) -> T,
 	set: (self: Atom<T>, value: T, force: boolean?) -> Atom<T>,
@@ -59,52 +58,75 @@ export type Atom<T> = setmetatable<{
 	is_frozen: (self: Atom<T>) -> boolean,
 	transaction: (self: Atom<T>, callback: (value: T) -> T) -> Atom<T>,
 	observe: (self: Atom<T>, callback: (new: T, old: T?) -> ()) -> Connection,
-	get_signal: (self: Atom<T>) -> Signal<T, T>,
-	-- any, since a type can't refer to itself with other parameters
-	map: <U>(self: Atom<T>, mapper: (value: T) -> U) -> any,
-	filter: (self: Atom<T>, predicate: (value: T) -> boolean) -> Atom<T>,
-	throttle: (self: Atom<T>, seconds: number) -> Atom<T>,
-	destroy: (self: Atom<T>) -> (),
-}, { __index: Atom<T> }>
+}
 
--- a copy of `value` with every table inside copied too, metatables kept
+-- the subscriptions to an atom, one entry each so the same function subscribed
+-- twice is called twice and removed separately
+type Listeners = { [{ (value: any) -> () }]: true }
+
+-- an atom keeps the metatable of a stream so Stream treats it as one, so its
+-- own methods are copied onto it
+const methods: any = {}
+
+-- what [Atom:observe] has before the first value
+const UNSET = table.freeze({})
+
+-- the destroy of every stream, which disconnects what `listen` and `each` gave
+const destroy_stream: (stream: any) -> () = (Stream.never() :: any).destroy
+
+-- whether `value` is a table without a metatable. a table with one is an
+-- object, kept as is and compared by reference
+const function is_plain(value: any): boolean
+	return type(value) == "table" and getmetatable(value) == nil
+end
+
+-- a copy of `value` with every plain table inside copied too
 const function deep_copy<T>(value: T): T
-	if type(value) ~= "table" then
-		-- the check narrows `value` to `T & ~table`, which is still a T
-		return value :: any
+	if not is_plain(value) then
+		return value
 	end
 
 	const copy = {}
 	for key, item in value :: any do
 		copy[deep_copy(key)] = deep_copy(item)
 	end
-	return setmetatable(copy, getmetatable(value :: any)) :: any
+	return copy :: any
 end
 
--- whether `a` and `b` are equal, comparing tables key by key
-const function deep_equal(a: any, b: any): boolean
-	if a == b then
+-- whether `left` and `right` are equal, comparing plain tables key by key
+const function deep_equal(left: any, right: any): boolean
+	if left == right then
 		return true
 	end
-	if type(a) ~= "table" or type(b) ~= "table" then
+	if not is_plain(left) or not is_plain(right) then
 		return false
 	end
 
-	for key, item in a do
-		if not deep_equal(item, b[key]) then
+	for key, item in left do
+		if not deep_equal(item, right[key]) then
 			return false
 		end
 	end
-	for key in b do
-		if a[key] == nil then
+	for key in right do
+		if left[key] == nil then
 			return false
 		end
 	end
 	return true
 end
 
+-- emits `value` to every subscription of `atom`. subscriptions added meanwhile
+-- wait for the next change, and removed ones are skipped
+const function notify(atom: any, value: any)
+	const listeners: Listeners = atom._listeners
+	for subscription in table.clone(listeners) do
+		if listeners[subscription] then
+			subscription[1](value)
+		end
+	end
+end
+
 const Atom = {}
-Atom.__index = Atom
 
 --[=[
 	@within Atom
@@ -115,19 +137,29 @@ Atom.__index = Atom
 	creates an Atom holding `value`. [Atom:reset] goes back to a copy of it
 ]=]
 function Atom.new<T>(value: T): Atom<T>
-	const void = Void.new()
+	const listeners: Listeners = {}
 
-	return setmetatable(
-		{
-			_value = value,
-			_initial = deep_copy(value),
-			_frozen = false,
-			_batch = false,
-			_changed = void:add(Signal.new()),
-			_void = void,
-		},
-		Atom
-	) :: any
+	local atom: any
+	atom = Stream.new(function(emit: (T) -> (), void: Void)
+		const subscription = { emit }
+		listeners[subscription] = true
+		void:add(function()
+			listeners[subscription] = nil
+		end)
+		emit(atom._value)
+	end) :: any
+
+	atom._value = value
+	atom._initial = deep_copy(value)
+	atom._frozen = false
+	-- the value when the running Atom.batch started, while there is one
+	atom._batch = false
+	atom._listeners = listeners
+	for name, method in methods do
+		atom[name] = method
+	end
+
+	return atom
 end
 
 --[=[
@@ -139,7 +171,7 @@ end
 	returns whether `obj` is an Atom
 ]=]
 function Atom.is(obj: any): boolean
-	return type(obj) == "table" and getmetatable(obj) == Atom
+	return Stream.is(obj) and obj.set == methods.set
 end
 
 --[=[
@@ -160,8 +192,8 @@ end
 	```
 ]=]
 function Atom.batch(atoms: { Atom<any> }, callback: () -> ())
-	const batching: { Atom<any> } = {}
-	for _, atom in atoms do
+	const batching: { any } = {}
+	for _, atom: any in atoms do
 		if not atom._batch then
 			atom._batch = { old = deep_copy(atom._value) }
 			table.insert(batching, atom)
@@ -171,10 +203,10 @@ function Atom.batch(atoms: { Atom<any> }, callback: () -> ())
 	const ok, err = pcall(callback)
 
 	for _, atom in batching do
-		const old = (atom._batch :: { old: any }).old
+		const old = atom._batch.old
 		atom._batch = false
 		if not deep_equal(atom._value, old) then
-			atom._changed:fire(atom._value, old)
+			notify(atom, atom._value)
 		end
 	end
 
@@ -190,8 +222,8 @@ end
 
 	returns a deep copy of the value
 ]=]
-function Atom.get<T>(self: Atom<T>): T
-	return deep_copy(self._value)
+function methods.get<T>(self: Atom<T>): T
+	return deep_copy((self :: any)._value)
 end
 
 --[=[
@@ -202,8 +234,8 @@ end
 	returns the value itself, without copying it. don't change it, use
 	[Atom:set] or [Atom:update]
 ]=]
-function Atom.peek<T>(self: Atom<T>): T
-	return self._value
+function methods.peek<T>(self: Atom<T>): T
+	return (self :: any)._value
 end
 
 --[=[
@@ -213,19 +245,18 @@ end
 	@param force boolean?
 	@return Atom<T>
 
-	sets the value and notifies with the new and old values, unless it is deeply
-	equal to the current one and `force` isn't true. does nothing while frozen
+	sets the value and emits it, unless it is deeply equal to the current one
+	and `force` isn't true. does nothing while frozen
 ]=]
-function Atom.set<T>(self: Atom<T>, value: T, force: boolean?): Atom<T>
-	if self._frozen or (not force and deep_equal(self._value, value)) then
+function methods.set<T>(self: Atom<T>, value: T, force: boolean?): Atom<T>
+	const atom: any = self
+	if atom._frozen or (not force and deep_equal(atom._value, value)) then
 		return self
 	end
 
-	const old = self._value
-	self._value = value
-
-	if not self._batch then
-		self._changed:fire(value, old)
+	atom._value = value
+	if not atom._batch then
+		notify(atom, value)
 	end
 
 	return self
@@ -239,7 +270,7 @@ end
 
 	sets the value to what `callback` returns from a copy of the current one
 ]=]
-function Atom.update<T>(self: Atom<T>, callback: (value: T) -> T): Atom<T>
+function methods.update<T>(self: Atom<T>, callback: (value: T) -> T): Atom<T>
 	return self:set(callback(self:get()))
 end
 
@@ -252,7 +283,7 @@ end
 
 	adds `amount` to a number value, without going over `max`
 ]=]
-function Atom.increment<T>(self: Atom<T>, amount: number, max: number?): Atom<T>
+function methods.increment<T>(self: Atom<T>, amount: number, max: number?): Atom<T>
 	return self:update(function(value: any)
 		const new = value + amount
 		return if max then math.min(new, max) else new
@@ -268,7 +299,7 @@ end
 
 	subtracts `amount` from a number value, without going under `min`
 ]=]
-function Atom.decrement<T>(self: Atom<T>, amount: number, min: number?): Atom<T>
+function methods.decrement<T>(self: Atom<T>, amount: number, min: number?): Atom<T>
 	return self:update(function(value: any)
 		const new = value - amount
 		return if min then math.max(new, min) else new
@@ -282,7 +313,7 @@ end
 
 	flips a boolean value
 ]=]
-function Atom.toggle<T>(self: Atom<T>): Atom<T>
+function methods.toggle<T>(self: Atom<T>): Atom<T>
 	return self:update(function(value: any): any
 		return not value
 	end)
@@ -295,8 +326,8 @@ end
 
 	sets the value back to a copy of the one the atom was created with
 ]=]
-function Atom.reset<T>(self: Atom<T>): Atom<T>
-	return self:set(deep_copy(self._initial))
+function methods.reset<T>(self: Atom<T>): Atom<T>
+	return self:set(deep_copy((self :: any)._initial))
 end
 
 --[=[
@@ -306,8 +337,8 @@ end
 
 	ignores every change until [Atom:unfreeze] is called
 ]=]
-function Atom.freeze<T>(self: Atom<T>): Atom<T>
-	self._frozen = true
+function methods.freeze<T>(self: Atom<T>): Atom<T>
+	(self :: any)._frozen = true
 	return self
 end
 
@@ -318,8 +349,8 @@ end
 
 	lets the value change again after [Atom:freeze]
 ]=]
-function Atom.unfreeze<T>(self: Atom<T>): Atom<T>
-	self._frozen = false
+function methods.unfreeze<T>(self: Atom<T>): Atom<T>
+	(self :: any)._frozen = false
 	return self
 end
 
@@ -330,8 +361,8 @@ end
 
 	returns whether the atom is frozen
 ]=]
-function Atom.is_frozen<T>(self: Atom<T>): boolean
-	return self._frozen
+function methods.is_frozen<T>(self: Atom<T>): boolean
+	return (self :: any)._frozen
 end
 
 --[=[
@@ -344,11 +375,12 @@ end
 	doesn't error. the atom is frozen while `callback` runs, and an error is
 	warned
 ]=]
-function Atom.transaction<T>(self: Atom<T>, callback: (value: T) -> T): Atom<T>
-	const was_frozen = self._frozen
-	self._frozen = true
+function methods.transaction<T>(self: Atom<T>, callback: (value: T) -> T): Atom<T>
+	const atom: any = self
+	const was_frozen = atom._frozen
+	atom._frozen = true
 	const ok, result = pcall(callback, self:get())
-	self._frozen = was_frozen
+	atom._frozen = was_frozen
 
 	if ok then
 		self:set(result)
@@ -365,106 +397,22 @@ end
 	@param callback (new: T, old: T?) -> ()
 	@return Connection
 
-	calls `callback` right away with a copy of the value, then on every change
-	with the new and old values
-]=]
-function Atom.observe<T>(self: Atom<T>, callback: (new: T, old: T?) -> ()): Connection
-	Thread(callback, self:get())
-	return self._changed:connect(callback)
-end
-
---[=[
-	@within Atom
-	@method get_signal
-	@return Signal<T, T>
-
-	returns the [Signal] that fires with the new and old values on every change
-]=]
-function Atom.get_signal<T>(self: Atom<T>): Signal<T, T>
-	return self._changed
-end
-
--- creates an atom destroyed with `self`, that stops following it once destroyed
-const function derive(self: Atom<any>, value: any, follow: (derived: Atom<any>, new: any) -> ()): any
-	const derived: Atom<any> = self._void:add(Atom.new(value) :: any)
-	const following = self._changed:connect(function(new)
-		follow(derived, new)
-	end)
-	derived._void:add(following)
-	return derived
-end
-
---[=[
-	@within Atom
-	@method map
-	@param mapper (value: T) -> U
-	@return Atom<U>
-
-	returns an atom holding what `mapper` returns from this one's value, kept up
-	to date
+	calls `callback` right away with the value, then on every change with the
+	new and old values, until the [Connection] is disconnected. `callback` runs
+	on its own thread with [Thread], so it can yield
 
 	```lua
-	local label = coins:map(function(value)
-		return `{value} coins`
+	coins:observe(function(new, old)
+		print(`{old} -> {new}`)
 	end)
 	```
 ]=]
-function Atom.map<T, U>(self: Atom<T>, mapper: (value: T) -> U): Atom<U>
-	return derive(self, mapper(self:get()), function(derived, new)
-		derived:set(mapper(deep_copy(new)))
-	end)
-end
-
---[=[
-	@within Atom
-	@method filter
-	@param predicate (value: T) -> boolean
-	@return Atom<T>
-
-	returns an atom that starts with this one's value, then only follows the
-	values `predicate` returns true for
-]=]
-function Atom.filter<T>(self: Atom<T>, predicate: (value: T) -> boolean): Atom<T>
-	return derive(self, self:get(), function(derived, new)
-		if predicate(new) then
-			derived:set(deep_copy(new))
-		end
-	end)
-end
-
---[=[
-	@within Atom
-	@method throttle
-	@param seconds number
-	@return Atom<T>
-
-	returns an atom that follows this one at most once every `seconds`. a change
-	coming sooner is held, and the latest held value is set once the time passed
-]=]
-function Atom.throttle<T>(self: Atom<T>, seconds: number): Atom<T>
-	local last = -math.huge
-	local held: { value: T } | false = false
-
-	return derive(self, self:get(), function(derived, new)
-		const now = os.clock()
-		if now - last >= seconds then
-			last = now
-			derived:set(deep_copy(new))
-			return
-		end
-
-		const waiting = held ~= false
-		held = { value = deep_copy(new) }
-		if not waiting then
-			task.delay(seconds - (now - last), function()
-				const latest = held
-				held = false
-				if latest then
-					last = os.clock()
-					derived:set(latest.value)
-				end
-			end)
-		end
+function methods.observe<T>(self: Atom<T>, callback: (new: T, old: T?) -> ()): Connection
+	local last: any = UNSET
+	return self:listen(function(value: T)
+		const old = if last == UNSET then nil else last
+		last = value
+		Thread(callback, value, old)
 	end)
 end
 
@@ -472,11 +420,12 @@ end
 	@within Atom
 	@method destroy
 
-	disconnects everything listening to the atom and destroys the atoms derived
-	from it
+	disconnects everything listening to the atom, streams made from it included.
+	the value can still be read and set afterwards
 ]=]
-function Atom.destroy<T>(self: Atom<T>)
-	self._void:clean()
+function methods.destroy<T>(self: Atom<T>)
+	table.clear((self :: any)._listeners)
+	destroy_stream(self)
 end
 
 return table.freeze({

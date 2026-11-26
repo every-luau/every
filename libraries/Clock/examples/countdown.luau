@@ -30,7 +30,7 @@ else
 	end)
 
 	-- Or once a second, through an Atom.
-	round:atom():map(math.ceil):observe(function(seconds)
+	round:atom():map(math.ceil):changed():listen(function(seconds)
 		print(`{seconds} seconds left`)
 	end)
 end

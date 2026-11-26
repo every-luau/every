@@ -4,11 +4,17 @@ local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
 local roblox = require("./roblox")
 local Atom = require("../src")
+local Stream = require("../../Stream/src")
 
 -- records every (new, old) an atom notifies, skipping the first call of observe
 local function record(atom: any): { { any } }
 	local changes: { { any } } = {}
-	atom:get_signal():connect(function(new, old)
+	local first = true
+	atom:observe(function(new, old)
+		if first then
+			first = false
+			return
+		end
 		table.insert(changes, { new, old })
 	end)
 	return changes
@@ -37,6 +43,16 @@ describe("Atom", function()
 		expect(#changes).toBe(1)
 	end)
 
+	it("compares and copies tables with a metatable by reference", function()
+		local class = {}
+		local first, second = setmetatable({}, class), setmetatable({}, class)
+		local atom = Atom.new(first)
+		local changes = record(atom)
+		expect(atom:get()).toBe(first)
+		atom:set(second)
+		expect(#changes).toBe(1)
+	end)
+
 	it("returns copies from get", function()
 		local atom = Atom.new({ list = { 1 } })
 		local copy = atom:get()
@@ -44,13 +60,15 @@ describe("Atom", function()
 		expect(atom:peek().list).toEqual({ 1 })
 	end)
 
-	it("calls observe right away then on changes", function()
+	it("calls observe right away then on changes, until disconnected", function()
 		local atom = Atom.new("a")
 		local seen: { any } = {}
-		atom:observe(function(new)
+		local connection = atom:observe(function(new)
 			table.insert(seen, new)
 		end)
 		atom:set("b")
+		connection:disconnect()
+		atom:set("c")
 		expect(seen).toEqual({ "a", "b" })
 	end)
 
@@ -119,55 +137,77 @@ describe("Atom", function()
 		expect(#y_changes).toBe(0)
 	end)
 
-	it("derives with map and filter", function()
-		local number = Atom.new(1)
-		local doubled = number:map(function(value)
-			return value * 2
-		end)
-		local even = number:filter(function(value)
-			return value % 2 == 0
-		end)
+	it("tells atoms apart", function()
+		expect(Atom.is(Atom.new(0))).toBe(true)
+		expect(Atom.is(Stream.of(0))).toBe(false)
+		expect(Atom.is({})).toBe(false)
+	end)
+end)
 
-		number:set(4)
-		expect(doubled:peek()).toBe(8)
-		expect(even:peek()).toBe(4)
+describe("as a stream", function()
+	it("is a stream that emits the value on listen and every change", function()
+		local atom = Atom.new(1)
+		expect(Stream.is(atom)).toBe(true)
 
-		number:set(5)
-		expect(doubled:peek()).toBe(10)
-		expect(even:peek()).toBe(4)
+		local seen: { any } = {}
+		local connection = atom
+			:map(function(value)
+				return value * 10
+			end)
+			:listen(function(value)
+				table.insert(seen, value)
+			end)
+		atom:set(1)
+		atom:set(2)
+		connection:disconnect()
+		atom:set(3)
+		expect(seen).toEqual({ 10, 20 })
+		expect(atom:wait()).toBe(3)
 	end)
 
-	it("throttles changes", function()
-		local number = Atom.new(0)
-		local throttled = number:throttle(1)
-
-		number:set(1)
-		expect(throttled:peek()).toBe(1)
-
-		number:set(2)
-		number:set(3)
-		expect(throttled:peek()).toBe(1)
-
-		roblox.flush()
-		expect(throttled:peek()).toBe(3)
+	it("combines with other streams", function()
+		local first = Atom.new("ada")
+		local last = Atom.new("lovelace")
+		local seen: { string } = {}
+		Stream.combine(first, last, function(a, b)
+			return `{a} {b}`
+		end):listen(function(name)
+			table.insert(seen, name)
+		end)
+		last:set("byron")
+		expect(seen).toEqual({ "ada lovelace", "ada byron" })
 	end)
 
-	it("stops notifying and derived atoms once destroyed", function()
+	it("emits once per batch", function()
 		local atom = Atom.new(0)
-		local doubled = atom:map(function(value)
-			return value * 2
+		local seen: { number } = {}
+		atom:listen(function(value)
+			table.insert(seen, value)
 		end)
-		local changes = record(atom)
+		Atom.batch({ atom }, function()
+			atom:set(1)
+			atom:set(2)
+		end)
+		expect(seen).toEqual({ 0, 2 })
+	end)
+
+	it("stops every listener on destroy, streams made from it included", function()
+		local atom = Atom.new(0)
+		local seen: { any } = {}
+		local connection = atom:listen(function(value)
+			table.insert(seen, value)
+		end)
+		atom:map(function(value)
+			return value * 10
+		end):listen(function(value)
+			table.insert(seen, value)
+		end)
 
 		atom:destroy()
 		atom:set(1)
-		expect(#changes).toBe(0)
-		expect(doubled:peek()).toBe(0)
-	end)
-
-	it("tells atoms apart", function()
-		expect(Atom.is(Atom.new(0))).toBe(true)
-		expect(Atom.is({})).toBe(false)
+		expect(seen).toEqual({ 0, 0 })
+		expect(connection.connected).toBe(false)
+		expect(atom:peek()).toBe(1)
 	end)
 end)
 

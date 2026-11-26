@@ -10,25 +10,25 @@ calling the module applies props to an instance, and `Mount.create` makes a new 
 
 ```toml
 [dependencies]
+Atom = { name = "every/atom", version = "^0.0.1" }
 Mount = { name = "every/mount", version = "^0.0.1" }
-Stream = { name = "every/stream", version = "^0.0.1" }
 ```
 
 ```sh
 embr install
 ```
 
-installs [Connection](https://every-luau.github.io/docs/connection), [Stream](https://every-luau.github.io/docs/stream) and [Void](https://every-luau.github.io/docs/void) with it. add `Stream` to your own dependencies to make states and other streams for the props
+installs [Connection](https://every-luau.github.io/docs/connection), [Stream](https://every-luau.github.io/docs/stream) and [Void](https://every-luau.github.io/docs/void) with it. add [Atom](https://every-luau.github.io/docs/atom) to your own dependencies for values you set, and `Stream` for other streams
 
 ## Usage
 
 ```lua
+local Atom = require(ReplicatedStorage.Packages.Atom)
 local Mount = require(ReplicatedStorage.Packages.Mount)
-local Stream = require(ReplicatedStorage.Packages.Stream)
 
 -- a button that counts its clicks and turns blue while hovered
-local count = Stream.state(0)
-local hovered = Stream.state(false)
+local count = Atom.new(0)
+local hovered = Atom.new(false)
 
 local connection = Mount(Instance.new("TextButton"), {
 	Size = UDim2.fromOffset(200, 50),

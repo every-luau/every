@@ -45,16 +45,21 @@ export type Signal<T...> = Signal.Signal<T...>
 
 -- one record a replicated clock, split by `key` so each clock has its own
 -- audience. a change only sends the fields that moved
-const Net = Lync.define("Clock", {
-	clocks = Lync.replicate(Lync.struct({
-		key = Lync.vlq(),
-		name = Lync.str(1, 100),
-		time = Lync.f64(),
-		at = Lync.f64(),
-		speed = Lync.f64(),
-		playing = Lync.bool(),
-	})):keyBy("key"),
-})
+const Net = Lync.define(
+	"Clock",
+	{
+		clocks = Lync.replicate(
+			Lync.struct({
+				key = Lync.vlq(),
+				name = Lync.str(1, 100),
+				time = Lync.f64(),
+				at = Lync.f64(),
+				speed = Lync.f64(),
+				playing = Lync.bool(),
+			})
+		):keyBy("key"),
+	}
+)
 const clocks: any = Net.clocks
 
 export type Clock = setmetatable<{
@@ -506,11 +511,14 @@ function Clock.every(length: number, callback: (period: number) -> (), offset: n
 		-- the period to wait for is known up front, so a delay that wakes up a
 		-- little early still reports the right one
 		const start = period * length + shift
-		thread = task.delay(math.max(start - now(), 0), function()
-			thread = nil
-			schedule(period + 1)
-			callback(period)
-		end)
+		thread = task.delay(
+			math.max(start - now(), 0),
+			function()
+				thread = nil
+				schedule(period + 1)
+				callback(period)
+			end
+		)
 	end
 
 	schedule(math.floor((now() - shift) / length) + 1)
@@ -956,9 +964,14 @@ function Clock.observe(self: Clock, callback: (time: number) -> ()): Connection
 		callback(self:get_time())
 
 		if self._playing and not loop then
-			loop = void:add(Loop(0, function()
-				callback(self:get_time())
-			end))
+			loop = void:add(
+				Loop(
+					0,
+					function()
+						callback(self:get_time())
+					end
+				)
+			)
 		elseif not self._playing and loop then
 			void:clean_item(loop)
 			loop = false
@@ -1082,7 +1095,6 @@ return table.freeze({
 	next = Clock.next,
 	every = Clock.every,
 	is = Clock.is,
-
 	MINUTE = 60,
 	HOUR = 3600,
 	DAY = 86400,
