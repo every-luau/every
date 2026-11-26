@@ -1,7 +1,7 @@
 [package]
 name = "every/elo"
 version = "0.0.1"
-description = ""
+description = "Elo rates players from the matches they play against each other."
 authors = []
 repository = "every-luau/every"
 license = "MIT"

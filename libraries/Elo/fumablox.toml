@@ -1,5 +1,5 @@
 title = "Elo"
-description = ""
+description = "Elo rates players from the matches they play against each other."
 gitRepoUrl = "https://github.com/every-luau/every"
 gitSourceBranch = "main"
 
