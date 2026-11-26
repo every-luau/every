@@ -1,0 +1,31 @@
+[package]
+name = "every/clock"
+version = "0.0.1"
+description = "Clock is a time that moves at a speed, the same on the server and every client."
+authors = []
+repository = "every-luau/every"
+license = "MIT"
+
+[target]
+environment = "shared"
+main = "src/init.luau"
+includes = ["src", "default.project.json", "README.md", "LICENSE"]
+
+[indices]
+wally = "https://github.com/UpliftGames/wally-index"
+
+[dependencies]
+Atom = { name = "every/atom", version = "^0.0.1" }
+Connection = { name = "every/connection", version = "^0.0.1" }
+Future = { name = "every/future", version = "^0.0.1" }
+Loop = { name = "every/loop", version = "^0.0.1" }
+Lync = { name = "axp3cter/lync", version = "^4.0.3", index = "wally" }
+Signal = { name = "every/signal", version = "^0.0.1" }
+Void = { name = "every/void", version = "^0.0.1" }
+
+[tools]
+lest = "lest-luau/lest@0.6.0"
+rojo = "rojo-rbx/rojo@7.7.0"
+
+[scripts]
+test = "lest"

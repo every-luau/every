@@ -1,0 +1,10 @@
+title = "Clock"
+description = "Clock is a time that moves at a speed, the same on the server and every client."
+gitRepoUrl = "https://github.com/every-luau/every"
+gitSourceBranch = "main"
+
+code = ["src"]
+projectFile = "default.project.json"
+# Only document what has a Moonwave comment; inference picks up internals like `task`.
+inferUndocumented = false
+robloxLinks = true
