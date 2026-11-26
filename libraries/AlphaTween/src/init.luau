@@ -190,11 +190,14 @@ function AlphaTween.lerp<T>(from: T, to: T, alpha: number): T
 	const kind = typeof(from)
 
 	if kind == "number" then
-		const a, b = from :: any, to :: any
-		return (a + (b - a) * alpha) :: any
+		const start, goal = from :: any, to :: any
+		return (start + (goal - start) * alpha) :: any
 	elseif kind == "UDim" then
-		const a, b = from :: any, to :: any
-		return UDim.new(a.Scale + (b.Scale - a.Scale) * alpha, a.Offset + (b.Offset - a.Offset) * alpha) :: any
+		const start, goal = from :: any, to :: any
+		return UDim.new(
+			start.Scale + (goal.Scale - start.Scale) * alpha,
+			start.Offset + (goal.Offset - start.Offset) * alpha
+		) :: any
 	end
 
 	const lerp = if type(from) == "table" or type(from) == "userdata" then (from :: any).Lerp else nil

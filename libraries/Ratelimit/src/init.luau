@@ -55,8 +55,8 @@ const function new<K>(limit: number, interval: number): Limiter<K>
 	const counts: { [any]: number } = {}
 
 	return function(key: K?): boolean
-		const k: any = if key == nil then NO_KEY else key
-		const count = counts[k] or 0
+		const bucket: any = if key == nil then NO_KEY else key
+		const count = counts[bucket] or 0
 		if count >= limit then
 			return false
 		end
@@ -65,12 +65,12 @@ const function new<K>(limit: number, interval: number): Limiter<K>
 			task.delay(
 				interval,
 				function()
-					counts[k] = nil
+					counts[bucket] = nil
 				end
 			)
 		end
 
-		counts[k] = count + 1
+		counts[bucket] = count + 1
 		return true
 	end
 end

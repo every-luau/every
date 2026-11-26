@@ -879,15 +879,15 @@ function Schema.map<K, V>(
 			return `expected {expect}, got {total} pairs`, ""
 		end
 
-		for k, v in map do
-			const key_reason = test(key_node, k)
+		for entry_key, entry_value in map do
+			const key_reason = test(key_node, entry_key)
 			if key_reason then
-				return `is not a valid key, {key_reason}`, join(k)
+				return `is not a valid key, {key_reason}`, join(entry_key)
 			end
 
-			const reason, path = test(value_node, v)
+			const reason, path = test(value_node, entry_value)
 			if reason then
-				return reason, join(k, path)
+				return reason, join(entry_key, path)
 			end
 		end
 
@@ -906,12 +906,12 @@ function Schema.map<K, V>(
 		-- drops the pairs whose key does not fit, and repairs their values
 		const out = {}
 		local total = 0
-		for k, v in map do
+		for entry_key, entry_value in map do
 			if total >= high then
 				break
 			end
-			if fits(key_node, k) then
-				out[k] = reconcile(value_node, v)
+			if fits(key_node, entry_key) then
+				out[entry_key] = reconcile(value_node, entry_value)
 				total += 1
 			end
 		end

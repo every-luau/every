@@ -204,8 +204,11 @@ function BetterScale.get_scale(self: BetterScale): number?
 
 	const size = container.AbsoluteSize
 	const resolution = attributes.Resolution
-	const x, y = size.X / resolution.X, size.Y / resolution.Y
-	const fit = if direction == Enum.AutomaticSize.X then x elseif direction == Enum.AutomaticSize.Y then y else math.min(x, y)
+	const scale_x, scale_y = size.X / resolution.X, size.Y / resolution.Y
+	const fit = if direction == Enum.AutomaticSize.X
+		then scale_x
+		elseif direction == Enum.AutomaticSize.Y then scale_y
+		else math.min(scale_x, scale_y)
 
 	return math.clamp(fit, range.Min, range.Max) * ratio
 end
