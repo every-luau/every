@@ -160,12 +160,12 @@ Gradient.__index = Gradient
 const moving: { [any]: true } = {}
 local heartbeat: RBXScriptConnection? = nil
 
-const function lerp_color(a: Color3, b: Color3, alpha: number): Color3
-	return a:Lerp(b, alpha)
+const function lerp_color(from: Color3, to: Color3, alpha: number): Color3
+	return from:Lerp(to, alpha)
 end
 
-const function lerp_number(a: number, b: number, alpha: number): number
-	return a + (b - a) * alpha
+const function lerp_number(from: number, to: number, alpha: number): number
+	return from + (to - from) * alpha
 end
 
 -- reads the keypoints of a ColorSequence or a NumberSequence as a loop. the
